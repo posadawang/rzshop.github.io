@@ -4,3 +4,12 @@ body { font-family: 'Noto Sans TC', system-ui, sans-serif; }
 .card-img-top { object-fit: cover; height: 180px; }
 .badge-tag { background: rgba(0,0,0,.08); }
 .card:hover { transform: translateY(-3px); transition: transform .2s ease; }
+/* 滑鼠移過圖片放大 + 變亮特效 */
+a img {
+  transition: transform 0.2s, filter 0.2s;
+}
+
+a img:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
