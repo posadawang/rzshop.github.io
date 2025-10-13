@@ -1,0 +1,6 @@
+:root { --hero: linear-gradient(120deg, #6a11cb, #2575fc); }
+body { font-family: 'Noto Sans TC', system-ui, sans-serif; }
+.bg-hero { background-image: var(--hero); }
+.card-img-top { object-fit: cover; height: 180px; }
+.badge-tag { background: rgba(0,0,0,.08); }
+.card:hover { transform: translateY(-3px); transition: transform .2s ease; }

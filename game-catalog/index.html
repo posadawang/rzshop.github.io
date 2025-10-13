@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阿智小舖｜遊戲帳號展示館</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">
+      <img src="assets/images/logo.svg" alt="" width="28" height="28" class="me-2">阿智小舖
+    </a>
+  </div>
+</nav>
+
+<header class="py-5 bg-hero text-center text-white">
+  <div class="container">
+    <h1 class="display-6 fw-bold">遊戲帳號展示館</h1>
+    <p class="lead opacity-75">支援搜尋、分類與標籤篩選。僅供展示，無下單功能。</p>
+    <div class="row justify-content-center mt-4">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div class="input-group input-group-lg">
+          <span class="input-group-text">🔍</span>
+          <input type="search" id="searchInput" class="form-control" placeholder="輸入遊戲 / 編號 / 標籤">
+          <button class="btn btn-primary" id="clearBtn" type="button">清除</button>
+        </div>
+        <div class="small mt-2 text-start" id="resultMeta"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="py-4" id="catalog">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <span class="fw-semibold me-2">分類：</span>
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-secondary btn-sm filter-btn active" data-filter="all">全部</button>
+        <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="部落衝突">部落衝突</button>
+        <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="荒野亂鬥">荒野亂鬥</button>
+        <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="皇室戰爭">皇室戰爭</button>
+        <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="其他遊戲">其他遊戲</button>
+      </div>
+      <div class="ms-auto">
+        <select id="sortSelect" class="form-select form-select-sm" style="width:auto">
+          <option value="default">排序：預設</option>
+          <option value="priceAsc">價格：低→高</option>
+          <option value="priceDesc">價格：高→低</option>
+          <option value="titleAsc">標題：A→Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cards" class="row g-3"></div>
+    <div class="text-center mt-4">
+      <button id="loadMoreBtn" class="btn btn-outline-primary">載入更多</button>
+    </div>
+  </div>
+</main>
+
+<footer class="py-4 border-top text-center small">
+  <div class="container">
+    © <span id="year"></span> 阿智小舖 • 僅供展示用途
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
