@@ -1,0 +1,291 @@
+[
+  {
+    "id": "A001",
+    "category": "部落衝突",
+    "title": "A001 五工人滿防帳號",
+    "price": 350,
+    "description": "TH15，滿防禦、滿科技，寶石2000+。",
+    "thumbnail": "assets/images/a001.jpg",
+    "gallery": [
+      "assets/images/a001_1.jpg",
+      "assets/images/a001_2.jpg",
+      "assets/images/a001_3.jpg"
+    ],
+    "link": "products/product.html?id=A001"
+  },
+  {
+    "id": "A002",
+    "category": "部落衝突",
+    "title": "A002 速本實用帳號",
+    "price": 280,
+    "description": "TH14 實用配置，部隊齊全。",
+    "thumbnail": "assets/images/a002.jpg",
+    "gallery": [
+      "assets/images/a002_1.jpg",
+      "assets/images/a002_2.jpg"
+    ],
+    "link": "products/product.html?id=A002"
+  },
+  {
+    "id": "A003",
+    "category": "部落衝突",
+    "title": "A003 滿科技村莊",
+    "price": 420,
+    "description": "高等防禦、兵種滿級。",
+    "thumbnail": "assets/images/a003.jpg",
+    "gallery": [
+      "assets/images/a003_1.jpg",
+      "assets/images/a003_2.jpg"
+    ],
+    "link": "products/product.html?id=A003"
+  },
+  {
+    "id": "A004",
+    "category": "部落衝突",
+    "title": "A004 高本寶石帳號",
+    "price": 390,
+    "description": "寶石 3000+，方便改名。",
+    "thumbnail": "assets/images/a004.jpg",
+    "gallery": [
+      "assets/images/a004_1.jpg"
+    ],
+    "link": "products/product.html?id=A004"
+  },
+  {
+    "id": "A005",
+    "category": "部落衝突",
+    "title": "A005 雷龍流配置",
+    "price": 360,
+    "description": "雷龍全開，援軍強勢。",
+    "thumbnail": "assets/images/a005.jpg",
+    "gallery": [
+      "assets/images/a005_1.jpg"
+    ],
+    "link": "products/product.html?id=A005"
+  },
+  {
+    "id": "A006",
+    "category": "部落衝突",
+    "title": "A006 團戰常勝號",
+    "price": 330,
+    "description": "團戰星數穩定，防禦實用。",
+    "thumbnail": "assets/images/a006.jpg",
+    "gallery": [
+      "assets/images/a006_1.jpg",
+      "assets/images/a006_2.jpg"
+    ],
+    "link": "products/product.html?id=A006"
+  },
+  {
+    "id": "A007",
+    "category": "部落衝突",
+    "title": "A007 農資效率號",
+    "price": 250,
+    "description": "採集加速、升級效率佳。",
+    "thumbnail": "assets/images/a007.jpg",
+    "gallery": [
+      "assets/images/a007_1.jpg"
+    ],
+    "link": "products/product.html?id=A007"
+  },
+  {
+    "id": "A008",
+    "category": "部落衝突",
+    "title": "A008 滿牆滿陷阱",
+    "price": 410,
+    "description": "牆與陷阱全滿級，防守強。",
+    "thumbnail": "assets/images/a008.jpg",
+    "gallery": [
+      "assets/images/a008_1.jpg",
+      "assets/images/a008_2.jpg",
+      "assets/images/a008_3.jpg"
+    ],
+    "link": "products/product.html?id=A008"
+  },
+  {
+    "id": "A009",
+    "category": "部落衝突",
+    "title": "A009 競技向高本",
+    "price": 480,
+    "description": "高端對戰配置，細節完整。",
+    "thumbnail": "assets/images/a009.jpg",
+    "gallery": [
+      "assets/images/a009_1.jpg"
+    ],
+    "link": "products/product.html?id=A009"
+  },
+  {
+    "id": "A010",
+    "category": "部落衝突",
+    "title": "A010 老字號收藏",
+    "price": 520,
+    "description": "老玩家帳號，收藏向。",
+    "thumbnail": "assets/images/a010.jpg",
+    "gallery": [
+      "assets/images/a010_1.jpg",
+      "assets/images/a010_2.jpg"
+    ],
+    "link": "products/product.html?id=A010"
+  },
+  {
+    "id": "B001",
+    "category": "荒野亂鬥",
+    "title": "B001 稀有造型帳號",
+    "price": 350,
+    "description": "多款限定造型，角色齊全。",
+    "thumbnail": "assets/images/b001.jpg",
+    "gallery": [
+      "assets/images/b001_1.jpg",
+      "assets/images/b001_2.jpg"
+    ],
+    "link": "products/product.html?id=B001"
+  },
+  {
+    "id": "B002",
+    "category": "荒野亂鬥",
+    "title": "B002 高戰力帳號",
+    "price": 320,
+    "description": "多位角色高等級，高杯數。",
+    "thumbnail": "assets/images/b002.jpg",
+    "gallery": [
+      "assets/images/b002_1.jpg"
+    ],
+    "link": "products/product.html?id=B002"
+  },
+  {
+    "id": "B003",
+    "category": "荒野亂鬥",
+    "title": "B003 造型收藏向",
+    "price": 400,
+    "description": "皮膚多、收藏完整。",
+    "thumbnail": "assets/images/b003.jpg",
+    "gallery": [
+      "assets/images/b003_1.jpg",
+      "assets/images/b003_2.jpg"
+    ],
+    "link": "products/product.html?id=B003"
+  },
+  {
+    "id": "B004",
+    "category": "荒野亂鬥",
+    "title": "B004 新手入門實惠",
+    "price": 180,
+    "description": "入門友善，升級空間大。",
+    "thumbnail": "assets/images/b004.jpg",
+    "gallery": [
+      "assets/images/b004_1.jpg"
+    ],
+    "link": "products/product.html?id=B004"
+  },
+  {
+    "id": "B005",
+    "category": "荒野亂鬥",
+    "title": "B005 競技向配置",
+    "price": 380,
+    "description": "對戰實力強，隊友讚賞。",
+    "thumbnail": "assets/images/b005.jpg",
+    "gallery": [
+      "assets/images/b005_1.jpg"
+    ],
+    "link": "products/product.html?id=B005"
+  },
+  {
+    "id": "C001",
+    "category": "皇室戰爭",
+    "title": "C001 全卡牌解鎖",
+    "price": 420,
+    "description": "卡池完整，上分穩定。",
+    "thumbnail": "assets/images/c001.jpg",
+    "gallery": [
+      "assets/images/c001_1.jpg",
+      "assets/images/c001_2.jpg"
+    ],
+    "link": "products/product.html?id=C001"
+  },
+  {
+    "id": "C002",
+    "category": "皇室戰爭",
+    "title": "C002 高段位帳號",
+    "price": 460,
+    "description": "歷史高分亮眼，牌組齊。",
+    "thumbnail": "assets/images/c002.jpg",
+    "gallery": [
+      "assets/images/c002_1.jpg"
+    ],
+    "link": "products/product.html?id=C002"
+  },
+  {
+    "id": "C003",
+    "category": "皇室戰爭",
+    "title": "C003 皮膚收藏號",
+    "price": 390,
+    "description": "塔皮膚與表情豐富。",
+    "thumbnail": "assets/images/c003.jpg",
+    "gallery": [
+      "assets/images/c003_1.jpg"
+    ],
+    "link": "products/product.html?id=C003"
+  },
+  {
+    "id": "C004",
+    "category": "皇室戰爭",
+    "title": "C004 平衡實用號",
+    "price": 300,
+    "description": "通用牌組，對局穩定。",
+    "thumbnail": "assets/images/c004.jpg",
+    "gallery": [
+      "assets/images/c004_1.jpg",
+      "assets/images/c004_2.jpg"
+    ],
+    "link": "products/product.html?id=C004"
+  },
+  {
+    "id": "C005",
+    "category": "皇室戰爭",
+    "title": "C005 活動常勝號",
+    "price": 340,
+    "description": "活動與挑戰勝率佳。",
+    "thumbnail": "assets/images/c005.jpg",
+    "gallery": [
+      "assets/images/c005_1.jpg"
+    ],
+    "link": "products/product.html?id=C005"
+  },
+  {
+    "id": "D001",
+    "category": "其他遊戲",
+    "title": "D001 原神 入門帳號",
+    "price": 260,
+    "description": "原神示意：基礎角色、日常輕鬆。",
+    "thumbnail": "assets/images/d001.jpg",
+    "gallery": [
+      "assets/images/d001_1.jpg"
+    ],
+    "link": "products/product.html?id=D001"
+  },
+  {
+    "id": "D002",
+    "category": "其他遊戲",
+    "title": "D002 原神 觀光帳號",
+    "price": 300,
+    "description": "原神示意：探索向、資源適中。",
+    "thumbnail": "assets/images/d002.jpg",
+    "gallery": [
+      "assets/images/d002_1.jpg",
+      "assets/images/d002_2.jpg"
+    ],
+    "link": "products/product.html?id=D002"
+  },
+  {
+    "id": "D003",
+    "category": "其他遊戲",
+    "title": "D003 原神 收藏向帳號",
+    "price": 450,
+    "description": "原神示意：收藏與造型為主。",
+    "thumbnail": "assets/images/d003.jpg",
+    "gallery": [
+      "assets/images/d003_1.jpg"
+    ],
+    "link": "products/product.html?id=D003"
+  }
+]
