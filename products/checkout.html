@@ -1,73 +1,214 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>結帳｜阿智小舖</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- PayPal SDK：使用你的 Sandbox Client ID -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AQW6evNLgJ7tudOvNEMdEEWU5_Qb7r9zCHqNv6U2AhhKW4zk3z7cgCvTvWbO1AQGoFROhQnbBLEl4c-C&currency=USD"></script>
-
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body { font-family: "Noto Sans TC", sans-serif; background-color: #f8f9fa; }
-    .container { max-width: 720px; margin-top: 60px; }
+    body { font-family: system-ui, -apple-system, "Noto Sans TC", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .cart-card { max-width: 900px; margin: 24px auto; }
+    .price { font-weight: 700; }
+    .muted { color: #6c757d; }
+    .small-muted { font-size: .9rem; color:#6c757d; }
+    .empty { text-align:center; padding: 48px 12px; color:#6c757d; }
   </style>
 </head>
-
 <body>
-  <div class="container text-center">
-    <h2 class="mb-4 fw-bold">💳 阿智小舖 結帳測試頁</h2>
-    <p class="text-muted mb-4">使用 PayPal Sandbox 模式進行測試付款。</p>
 
-    <div class="card shadow-sm p-4">
-      <h5>訂單總金額：</h5>
-      <h2 id="totalAmount" class="text-success mb-4">$10.00 USD</h2>
+<nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="./index.html">
+      <img src="assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
+    </a>
+  </div>
+</nav>
 
-      <!-- PayPal 按鈕容器 -->
-      <div id="paypal-button-container"></div>
+<header class="py-4 bg-dark text-white">
+  <div class="container">
+    <h1 class="h4 mb-0">結帳</h1>
+  </div>
+</header>
 
-      <div id="resultMsg" class="mt-3 text-success fw-semibold"></div>
+<main class="container cart-card">
+  <!-- 購物車內容 -->
+  <div id="cartBox" class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">購物車</h5>
+      <div id="cartItems"></div>
+      <hr />
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="small-muted">金額以結帳幣別為準（預設 TWD）。</div>
+        <div>
+          <span class="me-2">合計：</span>
+          <span id="cartTotal" class="price">NT$ 0</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script>
-    // 模擬測試金額（之後可改成你的購物車金額）
-    const total = 10.00;
+  <!-- PayPal 按鈕 -->
+  <div class="card shadow-sm mt-3">
+    <div class="card-body">
+      <h5 class="card-title">付款</h5>
+      <div id="paypal-button-container"></div>
+      <div class="small-muted mt-2">
+        付款成功後，將以您提供的聯絡方式與您聯繫交付帳號。若有疑問可透過
+        <a href="https://lin.ee/5rGnYqx" target="_blank" rel="noopener">LINE 官方</a> 與我們聯繫。
+      </div>
+    </div>
+  </div>
 
-    paypal.Buttons({
-      style: {
-        layout: 'vertical',
-        color: 'gold',
-        shape: 'rect',
-        label: 'paypal'
-      },
+  <!-- 訊息 -->
+  <div id="msg" class="alert d-none mt-3" role="alert"></div>
+</main>
 
-      // 建立訂單（測試）
-      createOrder: (data, actions) => {
-        return actions.order.create({
-          purchase_units: [{
-            description: '阿智小舖 測試訂單',
-            amount: { value: total.toFixed(2), currency_code: 'USD' }
-          }]
-        });
-      },
+<footer class="py-4 border-top text-center small">
+  <div class="container">© <span id="year"></span> 阿智小舖</div>
+</footer>
 
-      // 付款成功
-      onApprove: async (data, actions) => {
-        const order = await actions.order.capture();
-        console.log('✅ 付款成功', order);
-        document.getElementById('resultMsg').textContent = '付款成功 ✅ 訂單編號：' + order.id;
-        alert('付款成功！訂單編號：' + order.id);
-      },
+<script>
+  // === 基本設定 ===
+  const CART_KEY = 'rz_cart';          // 你的購物車 localStorage key
+  const CURRENCY = 'TWD';              // 幣別：若不支援可改成 'USD'
+  const LINE_URL = 'https://lin.ee/5rGnYqx';
 
-      // 付款失敗
-      onError: (err) => {
-        console.error('❌ 付款失敗', err);
-        alert('付款失敗，請稍後再試。');
+  // 年份
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // 讀取購物車
+  function getCart() {
+    try {
+      const raw = localStorage.getItem(CART_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // 整理金額（以 TWD 顯示）
+  function nt(amount) {
+    try {
+      return Number(amount).toLocaleString('zh-TW', { style: 'currency', currency: 'TWD' });
+    } catch {
+      return 'NT$ ' + Number(amount).toFixed(0);
+    }
+  }
+
+  // 顯示購物車
+  function renderCart() {
+    const itemsBox = document.getElementById('cartItems');
+    const totalBox = document.getElementById('cartTotal');
+    const cart = getCart();
+
+    if (!cart.length) {
+      itemsBox.innerHTML = '<div class="empty">購物車目前是空的。</div>';
+      totalBox.textContent = nt(0);
+      return 0;
+    }
+
+    let html = '<div class="table-responsive"><table class="table align-middle mb-0">';
+    html += '<thead><tr><th>商品</th><th class="text-end">單價</th></tr></thead><tbody>';
+
+    let sum = 0;
+    cart.forEach(item => {
+      const title = item.title || item.id || '商品';
+      const price = Number(item.price) || 0;
+      sum += price;
+      html += `
+        <tr>
+          <td>
+            <div class="fw-semibold">${title}</div>
+            <div class="small-muted">${item.id || ''}</div>
+          </td>
+          <td class="text-end">${nt(price)}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    itemsBox.innerHTML = html;
+    totalBox.textContent = nt(sum);
+    return sum;
+  }
+
+  // 顯示訊息
+  function showMsg(type, text) {
+    const el = document.getElementById('msg');
+    el.className = 'alert mt-3 alert-' + (type || 'info');
+    el.textContent = text;
+  }
+
+  // 清空購物車
+  function clearCart() {
+    localStorage.removeItem(CART_KEY);
+  }
+
+  // 初始化畫面
+  const totalAmount = renderCart();
+</script>
+
+<!-- PayPal SDK（已使用你的 Live Client ID） -->
+<script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6YpUs_ZJpj1-McFXzZHOeN&currency=TWD"></script>
+
+<script>
+  // 若購物車沒東西，先提示
+  if (!totalAmount || totalAmount <= 0) {
+    showMsg('warning', '購物車為空，請先返回選購商品後再結帳。');
+  }
+
+  // PayPal 按鈕
+  paypal.Buttons({
+    style: {
+      layout: 'vertical',
+      color: 'gold',
+      shape: 'rect',
+      label: 'paypal'
+    },
+
+    // 建立訂單
+    createOrder: function(data, actions) {
+      const amount = renderCart(); // 再算一次，避免進入頁面後變更
+      if (!amount || amount <= 0) {
+        showMsg('warning', '購物車為空，無法建立訂單。');
+        return;
       }
+      return actions.order.create({
+        purchase_units: [{
+          amount: { value: String(amount), currency_code: CURRENCY },
+          description: '阿智小舖 - 遊戲帳號'
+        }]
+      });
+    },
 
-    }).render('#paypal-button-container');
-  </script>
+    // 付款核准
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        // ✅ 付款成功
+        clearCart();
+        renderCart();
+        showMsg('success',
+          `感謝付款，${details.payer.name.given_name || ''}！交易完成（訂單 ${details.id}）。` +
+          '我們將盡快與您聯繫交付帳號。若需要協助，' +
+          `<a href="${LINE_URL}" target="_blank" rel="noopener">點此加入 LINE 官方</a>。`
+        );
+        // 你也可以在這裡把 details 送到你的後端做記錄
+      });
+    },
+
+    // 付款取消
+    onCancel: function () {
+      showMsg('secondary', '您已取消付款，如需協助請聯繫我們的 LINE 官方。');
+    },
+
+    // 錯誤處理
+    onError: function (err) {
+      console.error(err);
+      showMsg('danger', '付款時發生錯誤，請稍後再試或聯繫我們的 LINE 官方。');
+    }
+  }).render('#paypal-button-container');
+</script>
+
 </body>
 </html>
