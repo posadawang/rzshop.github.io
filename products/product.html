@@ -1,107 +1,90 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>商品詳情｜阿智小舖</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../assets/styles.css" rel="stylesheet">
-</head>
-<body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container d-flex justify-content-between align-items-center">
-    <a class="navbar-brand fw-bold" href="../index.html">
-      <img src="../assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
-    </a>
-    <a href="../products/checkout.html" class="btn btn-outline-primary position-relative">
-      購物車
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
-    </a>
-  </div>
-</nav>
-
-<header class="py-4 bg-dark text-white">
-  <div class="container">
-    <h1 class="h4 mb-0">商品詳情</h1>
-  </div>
-</header>
-
-<main class="py-4">
-  <div class="container" id="productContainer"></div>
-</main>
-
-<footer class="py-4 border-top text-center small">
-  <div class="container">© <span id="year"></span> 阿智小舖</div>
-</footer>
-
-<!-- 年份 -->
 <script>
-document.addEventListener('DOMContentLoaded', ()=>{
-  const y=document.getElementById('year');
-  if(y) y.textContent=new Date().getFullYear();
-});
-</script>
+/* ========= 超保險：內建迷你購物車，不依賴其它檔案 ========= */
+(function () {
+  const CART_KEY = 'rz_cart_v1';
 
-<!-- Bootstrap -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  function getCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY))||[]}catch(_){return[]} }
+  function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCartBadge(); }
+  function addToCart(item, qty=1){
+    const c = getCart();
+    const i = c.findIndex(x=>x.id===item.id);
+    if(i>=0) c[i].qty += qty; else c.push({...item, qty});
+    saveCart(c);
+  }
+  function renderCartBadge(){
+    const el = document.querySelector('[data-cart-badge]');
+    if(!el) return;
+    const n = getCart().reduce((s,i)=>s+i.qty,0);
+    el.textContent = n;
+  }
+  window.__rzMiniCart = { addToCart, renderCartBadge }; // 讓別的頁也可用
+})();
+/* ============================================================ */
 
-<!-- 原本商品渲染 -->
-<script src="../js/app.js?v=5" defer></script>
+document.addEventListener('DOMContentLoaded', async () => {
+  // 每次載入先更新徽章
+  window.__rzMiniCart.renderCartBadge?.();
 
-<!-- ✅ 購物車功能 -->
-<script type="module">
-  import { addToCart, renderCartBadge } from '../js/cart.js';
+  const root = document.getElementById('productContainer');
+  if(!root){ console.warn('[rz] 找不到 #productContainer'); return; }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    renderCartBadge();
+  // 取得網址裡的 id（例：?id=A001）
+  const id = new URLSearchParams(location.search).get('id') || '';
 
-    // 取得當前商品 id
-    const params = new URLSearchParams(location.search);
-    const curId = params.get('id') || '';
-    const container = document.getElementById('productContainer');
+  // 從 items.json 撈資料（若失敗就改抓頁面上的文字）
+  let item = null;
+  try {
+    const r = await fetch('../data/items.json', {cache:'no-store'});
+    const data = await r.json();
+    const list = Array.isArray(data) ? data : (data.items||[]);
+    item = list.find(x => String(x.id) === String(id)) || null;
+  } catch(e) {
+    console.warn('[rz] 讀 items.json 失敗，將用 DOM fallback：', e);
+  }
 
-    // 從 items.json 讀取商品資料
-    let item = null;
-    try {
-      const r = await fetch('../data/items.json', { cache: 'no-store' });
-      const data = await r.json();
-      const list = Array.isArray(data) ? data : (data.items || []);
-      item = list.find(x => String(x.id) === String(curId)) || null;
-    } catch (e) {
-      console.warn('讀取 items.json 失敗：', e);
-    }
+  // 等 renderProduct 把內容塞進來，再插入按鈕
+  const injectButtonIfNeeded = () => {
+    if(root.querySelector('.add-cart')) return; // 已有按鈕就不重塞
 
-    // 監聽內容渲染完成後插入按鈕
-    const obs = new MutationObserver(() => {
-      if (container.querySelector('.add-cart')) return; // 已有按鈕
-      const mount = container.querySelector('.price') ||
-                    container.querySelector('.h4') ||
-                    container.querySelector('.col-md-6:last-child') ||
-                    container;
+    // 嘗試從頁面抓資料當作後備
+    const titleEl = root.querySelector('h1,h2,h3,.h1,.h2,.h3') || {};
+    const priceEl = root.querySelector('.price,.h4,.fs-4,.text-danger,.product-price') || {};
+    const titleText = (item?.title) || (titleEl.textContent||document.title.replace('｜阿智小舖','')).trim();
+    const priceNum = Number(item?.price ?? (priceEl.textContent||'').replace(/[^\d.]/g,''));
 
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-primary mt-3 add-cart';
-      btn.textContent = '加入購物車';
-      btn.dataset.id = item?.id || curId || 'UNKNOWN';
-      btn.dataset.title = item?.title || document.title.replace('｜阿智小舖','');
-      btn.dataset.price = item?.price ?? 0;
-      mount.appendChild(btn);
-    });
-    obs.observe(container, { childList: true, subtree: true });
+    // 插入位置：價格區塊旁或右側資訊區，找不到就放 root
+    const mount = root.querySelector('.price')
+                || root.querySelector('.col-lg-5,.col-md-6:last-child,.product-actions')
+                || root;
 
-    // 綁定點擊事件
-    container.addEventListener('click', (e) => {
-      const b = e.target.closest('.add-cart');
-      if (!b) return;
-      addToCart({
-        id: b.dataset.id,
-        title: b.dataset.title,
-        price: Number(b.dataset.price)
+    // 建立按鈕
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary mt-3 add-cart';
+    btn.textContent = '加入購物車';
+    btn.dataset.id = item?.id || id || 'UNKNOWN';
+    btn.dataset.title = titleText || '商品';
+    btn.dataset.price = isNaN(priceNum) ? (item?.price ?? 0) : priceNum;
+
+    // 綁事件
+    btn.addEventListener('click', () => {
+      window.__rzMiniCart.addToCart({
+        id: btn.dataset.id,
+        title: btn.dataset.title,
+        price: Number(btn.dataset.price) || 0
       }, 1);
       alert('已加入購物車');
-      renderCartBadge();
+      window.__rzMiniCart.renderCartBadge?.();
     });
-  });
+
+    // 插入頁面
+    mount.appendChild(btn);
+  };
+
+  // 用 MutationObserver 等 renderProduct 完成
+  const obs = new MutationObserver(() => injectButtonIfNeeded());
+  obs.observe(root, {childList:true, subtree:true});
+
+  // 若 1.5 秒後還沒偵測到變化，也強制插一次（雙保險）
+  setTimeout(injectButtonIfNeeded, 1500);
+});
 </script>
-</body>
-</html>
