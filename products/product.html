@@ -7,9 +7,20 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="../assets/styles.css" rel="stylesheet">
   <style>
-    .thumb { cursor:pointer; border:2px solid transparent; transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
-    .thumb:hover { transform:scale(1.02); border-color:#ced4da; box-shadow:0 .25rem .75rem rgba(0,0,0,.05); }
-    .thumb-active { border-color:#0d6efd!important; box-shadow:0 .5rem 1rem rgba(13,110,253,.15); }
+    .thumb {
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .thumb:hover {
+      transform: scale(1.02);
+      border-color: #ced4da;
+      box-shadow: 0 .25rem .75rem rgba(0,0,0,.05);
+    }
+    .thumb-active {
+      border-color: #0d6efd !important;
+      box-shadow: 0 .5rem 1rem rgba(13,110,253,.15);
+    }
   </style>
 </head>
 <body>
@@ -33,10 +44,7 @@
 </header>
 
 <main class="py-4">
-  <!-- ⚠️ 一定要有這個容器 -->
-  <div class="container" id="productContainer">
-    <!-- 載入中/錯誤訊息會顯示在這裡 -->
-  </div>
+  <div class="container" id="productContainer"></div>
 </main>
 
 <footer class="py-4 border-top text-center small">
@@ -44,11 +52,17 @@
 </footer>
 
 <script>
-  // ====== 極簡購物車（localStorage），頁面獨立可用 ======
+  // ====== 超簡易購物車（localStorage） ======
   (function () {
     const CART_KEY = 'rz_cart_v1';
     function getCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY))||[]}catch(_){return[]} }
-    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCartBadge(); }
+    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderBadge(); }
+    function renderBadge(){
+      const el=document.querySelector('[data-cart-badge]');
+      if(!el) return;
+      const n=getCart().reduce((s,i)=>s+i.qty,0);
+      el.textContent=n;
+    }
     window.__rzCart = {
       add(item, qty=1){
         const c=getCart();
@@ -56,77 +70,66 @@
         if(i>=0) c[i].qty+=qty; else c.push({...item, qty});
         saveCart(c);
       },
-      badge(){
-        const el=document.querySelector('[data-cart-badge]');
-        if(!el) return;
-        const n=getCart().reduce((s,i)=>s+i.qty,0);
-        el.textContent=n;
-      }
+      badge: renderBadge
     };
-    document.addEventListener('DOMContentLoaded', ()=>__rzCart.badge());
+    document.addEventListener('DOMContentLoaded', renderBadge);
   })();
-  // =========================================================
+  // ============================================
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
   document.addEventListener('DOMContentLoaded', async () => {
     const root = document.getElementById('productContainer');
-    if (!root) { console.error('[rz] #productContainer 不存在'); return; }
+    if (!root) return;
 
-    // 顯示載入中
-    root.innerHTML = '<div class="text-center text-muted py-5">載入中…</div>';
+    root.innerHTML = '<div class="text-center text-muted py-5">載入中...</div>';
 
-    // 取得網址參數 id（例：?id=A001）
     const id = new URLSearchParams(location.search).get('id') || '';
     if (!id) {
       root.innerHTML = '<div class="alert alert-warning">找不到商品編號（網址需帶 ?id=XXX）。</div>';
       return;
     }
 
-    // 讀取商品資料
     let item = null;
     try {
-      const r = await fetch('../data/items.json', { cache: 'no-store' });
-      const data = await r.json();
+      const res = await fetch('../data/items.json', { cache: 'no-store' });
+      const data = await res.json();
       const list = Array.isArray(data) ? data : (data.items || []);
       item = list.find(x => String(x.id) === String(id)) || null;
     } catch (e) {
-      console.error('讀取 items.json 失敗：', e);
-      root.innerHTML = '<div class="alert alert-danger">無法載入商品資料，請稍後再試。</div>';
+      root.innerHTML = '<div class="alert alert-danger">無法載入商品資料。</div>';
+      console.error(e);
       return;
     }
 
     if (!item) {
-      root.innerHTML = '<div class="alert alert-warning">找不到這個商品（id：'+id+'）。</div>';
+      root.innerHTML = `<div class="alert alert-warning">找不到這個商品（id：${id}）。</div>`;
       return;
     }
 
-    // 準備圖片集
     const gallery = Array.isArray(item.gallery) && item.gallery.length ? item.gallery : [item.thumbnail];
 
-    // 渲染版型
     root.innerHTML = `
       <div class="row g-4">
         <div class="col-md-6">
           <div class="card shadow-sm">
-            <img id="mainImage" src="${gallery[0] || item.thumbnail}" class="card-img-top" alt="${item.title}">
+            <img id="mainImage" src="../${gallery[0]}" class="card-img-top" alt="${item.title}">
           </div>
           <div class="d-flex gap-2 mt-2 flex-wrap" id="thumbs">
-            ${gallery.map((src, idx)=>`
-              <img src="${src}" class="thumb ${idx===0?'thumb-active':''}" alt="縮圖${idx+1}" width="90" height="90" style="object-fit:cover;border-radius:.5rem;">
+            ${gallery.map((src, idx) => `
+              <img src="../${src}" class="thumb ${idx===0?'thumb-active':''}" alt="縮圖${idx+1}" width="90" height="90" style="object-fit:cover;border-radius:.5rem;">
             `).join('')}
           </div>
         </div>
 
         <div class="col-md-6">
           <h2 class="h4">${item.title}</h2>
-          <div class="mb-2 text-muted">${item.category || ''}</div>
+          <div class="mb-2 text-muted">${item.category}</div>
           <div class="mb-3">
             <span class="badge text-bg-primary me-2">編號 ${item.id}</span>
-            ${item.tags ? item.tags.map(t=>`<span class="badge text-bg-secondary me-1">${t}</span>`).join('') : ''}
           </div>
-          <p class="lead">${item.description || ''}</p>
-          <h4 class="text-danger fw-bold">NT$ <span>${Number(item.price||0).toLocaleString()}</span></h4>
+          <p class="lead">${item.description}</p>
+          <h4 class="text-danger fw-bold">NT$ ${Number(item.price).toLocaleString()}</h4>
 
           <div class="d-grid d-sm-flex gap-2 mt-3">
             <button id="btnAdd" class="btn btn-primary">加入購物車</button>
@@ -134,28 +137,25 @@
           </div>
 
           <hr class="my-4">
-          <div class="small text-muted">＊本頁僅供展示，不含自動交付。下單後請加 LINE 以利後續交付及驗證。</div>
+          <div class="small text-muted">＊本頁僅供展示，下單後請加 LINE 以利後續交付。</div>
         </div>
       </div>
     `;
 
-    // 縮圖切換主圖
     const mainImage = document.getElementById('mainImage');
-    const thumbs = document.getElementById('thumbs');
-    thumbs.addEventListener('click', e=>{
+    document.getElementById('thumbs').addEventListener('click', e => {
       const img = e.target.closest('img.thumb');
-      if(!img) return;
+      if (!img) return;
       mainImage.src = img.src;
-      thumbs.querySelectorAll('.thumb').forEach(t=>t.classList.remove('thumb-active'));
+      document.querySelectorAll('.thumb').forEach(t => t.classList.remove('thumb-active'));
       img.classList.add('thumb-active');
     });
 
-    // 加入購物車
-    document.getElementById('btnAdd').addEventListener('click', ()=>{
+    document.getElementById('btnAdd').addEventListener('click', () => {
       __rzCart.add({
         id: item.id,
         title: item.title,
-        price: Number(item.price||0)
+        price: Number(item.price)
       }, 1);
       alert('已加入購物車');
       __rzCart.badge();
@@ -163,10 +163,6 @@
   });
 </script>
 
-<!--（可選）若你要用原本 app.js 的 renderProduct，也可以保留，但這頁已自給自足。-->
-<!-- <script src="../js/app.js?v=5" defer></script> -->
-
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
