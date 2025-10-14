@@ -11,7 +11,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A001"
+    "link": "product.html?id=A001"
   },
   {
     "id": "A002",
@@ -24,7 +24,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A002"
+    "link": "product.html?id=A002"
   },
   {
     "id": "A003",
@@ -37,7 +37,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A003"
+    "link": "product.html?id=A003"
   },
   {
     "id": "A004",
@@ -49,7 +49,7 @@
     "gallery": [
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A004"
+    "link": "product.html?id=A004"
   },
   {
     "id": "A005",
@@ -64,7 +64,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A005"
+    "link": "product.html?id=A005"
   },
   {
     "id": "A006",
@@ -79,7 +79,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A006"
+    "link": "product.html?id=A006"
   },
   {
     "id": "A007",
@@ -91,7 +91,7 @@
     "gallery": [
       "assets/images/a007_1.jpg"
     ],
-    "link": "products/product.html?id=A007"
+    "link": "product.html?id=A007"
   },
   {
     "id": "A008",
@@ -101,12 +101,12 @@
     "description": "牆與陷阱全滿級，防守強。",
     "thumbnail": "assets/images/a001.jpg",
     "gallery": [
-     "assets/images/a001.jpg",
+      "assets/images/a001.jpg",
       "assets/images/a001.jpg",
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A008"
+    "link": "product.html?id=A008"
   },
   {
     "id": "A009",
@@ -121,7 +121,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A009"
+    "link": "product.html?id=A009"
   },
   {
     "id": "A010",
@@ -136,7 +136,7 @@
       "assets/images/a001.jpg",
       "assets/images/a001.jpg"
     ],
-    "link": "products/product.html?id=A010"
+    "link": "product.html?id=A010"
   },
   {
     "id": "B001",
@@ -156,7 +156,7 @@
       "assets/images/011.png",
       "assets/images/011i.png"
     ],
-    "link": "products/product.html?id=B001"
+    "link": "product.html?id=B001"
   },
   {
     "id": "B002",
@@ -171,7 +171,7 @@
       "assets/images/011.png",
       "assets/images/011.png"
     ],
-    "link": "products/product.html?id=B002"
+    "link": "product.html?id=B002"
   },
   {
     "id": "B003",
@@ -186,7 +186,7 @@
       "assets/images/011.png",
       "assets/images/011.png"
     ],
-    "link": "products/product.html?id=B003"
+    "link": "product.html?id=B003"
   },
   {
     "id": "B004",
@@ -201,7 +201,7 @@
       "assets/images/011.png",
       "assets/images/011.png"
     ],
-    "link": "products/product.html?id=B004"
+    "link": "product.html?id=B004"
   },
   {
     "id": "B005",
@@ -216,7 +216,7 @@
       "assets/images/011.png",
       "assets/images/011.png"
     ],
-    "link": "products/product.html?id=B005"
+    "link": "product.html?id=B005"
   },
   {
     "id": "C001",
@@ -231,7 +231,7 @@
       "assets/images/011.png",
       "assets/images/011.png"
     ],
-    "link": "products/product.html?id=C001"
+    "link": "product.html?id=C001"
   },
   {
     "id": "C002",
@@ -243,7 +243,7 @@
     "gallery": [
       "assets/images/c002_1.jpg"
     ],
-    "link": "products/product.html?id=C002"
+    "link": "product.html?id=C002"
   },
   {
     "id": "C003",
@@ -255,7 +255,7 @@
     "gallery": [
       "assets/images/c003_1.jpg"
     ],
-    "link": "products/product.html?id=C003"
+    "link": "product.html?id=C003"
   },
   {
     "id": "C004",
@@ -268,7 +268,7 @@
       "assets/images/c004_1.jpg",
       "assets/images/c004_2.jpg"
     ],
-    "link": "products/product.html?id=C004"
+    "link": "product.html?id=C004"
   },
   {
     "id": "C005",
@@ -280,7 +280,7 @@
     "gallery": [
       "assets/images/c005_1.jpg"
     ],
-    "link": "products/product.html?id=C005"
+    "link": "product.html?id=C005"
   },
   {
     "id": "D001",
@@ -292,7 +292,7 @@
     "gallery": [
       "assets/images/d001_1.jpg"
     ],
-    "link": "products/product.html?id=D001"
+    "link": "product.html?id=D001"
   },
   {
     "id": "D002",
@@ -305,7 +305,7 @@
       "assets/images/d002_1.jpg",
       "assets/images/d002_2.jpg"
     ],
-    "link": "products/product.html?id=D002"
+    "link": "product.html?id=D002"
   },
   {
     "id": "D003",
@@ -317,6 +317,6 @@
     "gallery": [
       "assets/images/d003_1.jpg"
     ],
-    "link": "products/product.html?id=D003"
+    "link": "product.html?id=D003"
   }
 ]
