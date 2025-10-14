@@ -6,12 +6,12 @@
   <title>阿智小舖｜遊戲帳號展示館</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/styles.css">
+  <link href="assets/styles.css" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="index.html">
+    <a class="navbar-brand fw-bold" href="./">
       <img src="assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
     </a>
   </div>
@@ -20,65 +20,90 @@
 <header class="py-5 bg-hero text-center text-white">
   <div class="container">
     <h1 class="display-6 fw-bold">遊戲帳號展示館</h1>
-    <p class="lead opacity-75">支援搜尋、分類與標籤篩選。僅供展示，無下單功能。</p>
+    <p class="lead opacity-75">首頁就能搜尋編號、關鍵字、價格與類別；也可用下方分類快速篩選。</p>
+
+    <!-- 搜尋列 -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div class="input-group input-group-lg">
+          <span class="input-group-text">🔍</span>
+          <input id="searchInput" class="form-control" type="search"
+                 placeholder="輸入編號 / 關鍵字 / 價格 / 類別（可多關鍵字，空白分隔）">
+          <button id="clearBtn" class="btn btn-outline-light" type="button">清除</button>
+        </div>
+        <div id="resultMeta" class="small mt-2 text-start"></div>
+      </div>
+    </div>
   </div>
 </header>
 
-<main class="py-4">
+<main class="py-4" id="catalog">
   <div class="container">
-    <div class="row g-3">
-      <!-- 部落衝突 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <a href="games/clash-of-clans.html" class="game-tile card text-decoration-none h-100">
-          <img class="card-img-top ratio-16x9 object-cover" src="assets/images/coc.jpg" alt="部落衝突">
-          <div class="card-body text-center">
-            <h5 class="card-title mb-0">部落衝突</h5>
-          </div>
-        </a>
-      </div>
-      <!-- 荒野亂鬥 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <a href="games/brawl-stars.html" class="game-tile card text-decoration-none h-100">
-          <img class="card-img-top ratio-16x9 object-cover" src="assets/images/brawl.jpg" alt="荒野亂鬥">
-          <div class="card-body text-center">
-            <h5 class="card-title mb-0">荒野亂鬥</h5>
-          </div>
-        </a>
-      </div>
-      <!-- 皇室戰爭 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <a href="games/clash-royale.html" class="game-tile card text-decoration-none h-100">
-          <img class="card-img-top ratio-16x9 object-cover" src="assets/images/royale.jpg" alt="皇室戰爭">
-          <div class="card-body text-center">
-            <h5 class="card-title mb-0">皇室戰爭</h5>
-          </div>
-        </a>
-      </div>
-      <!-- 其他遊戲 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <a href="games/other-games.html" class="game-tile card text-decoration-none h-100">
-          <img class="card-img-top ratio-16x9 object-cover" src="assets/images/others1.jpg" alt="其他遊戲">
-          <div class="card-body text-center">
-            <h5 class="card-title mb-0">其他遊戲</h5>
-          </div>
-        </a>
+
+    <!-- 分類快速篩選 -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <span class="fw-semibold me-2">分類：</span>
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-secondary btn-sm cat-btn active" data-cat="all">全部</button>
+        <button class="btn btn-outline-secondary btn-sm cat-btn" data-cat="部落衝突">部落衝突</button>
+        <button class="btn btn-outline-secondary btn-sm cat-btn" data-cat="荒野亂鬥">荒野亂鬥</button>
+        <button class="btn btn-outline-secondary btn-sm cat-btn" data-cat="皇室戰爭">皇室戰爭</button>
+        <button class="btn btn-outline-secondary btn-sm cat-btn" data-cat="其他遊戲">其他遊戲</button>
       </div>
     </div>
+
+    <!-- 卡片列表 -->
+    <div id="cards" class="row g-3"></div>
   </div>
 </main>
 
 <footer class="py-4 border-top text-center small">
-  <div class="container">
-    © <span id="year"></span> 阿智小舖 • 歡迎挑選
-  </div>
+  <div class="container">© <span id="year"></span> 阿智小舖 • 僅供展示用途</div>
 </footer>
 
 <script>
-  document.addEventListener('DOMContentLoaded',()=> {
-    const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
+  // 年份
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // 首頁載入：顯示全部並綁搜尋（依你現有的 js/app.js 介面）
+  document.addEventListener('DOMContentLoaded', () => {
+    // 若你的 app.js 有 renderAll()/renderCategory()，直接使用
+    if (typeof renderAll === 'function') {
+      renderAll(); // 顯示全部
+    } else if (typeof renderCategory === 'function') {
+      renderCategory('all', 'cards');
+    }
+
+    // 分類按鈕切換（切換 active 樣式並呼叫 render）
+    const btns = document.querySelectorAll('.cat-btn');
+    btns.forEach(b => b.addEventListener('click', () => {
+      btns.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const cat = b.getAttribute('data-cat');
+      if (cat === 'all') {
+        if (typeof renderAll === 'function') renderAll();
+        else if (typeof renderCategory === 'function') renderCategory('all', 'cards');
+      } else {
+        if (typeof renderCategory === 'function') renderCategory(cat, 'cards');
+      }
+      // 保留搜尋框內容自動套用（你的 app.js 已會自動依 searchInput 再次篩選）
+      const input = document.getElementById('searchInput');
+      input && input.dispatchEvent(new Event('input'));
+    }));
+
+    // 清除搜尋
+    document.getElementById('clearBtn')?.addEventListener('click', () => {
+      const i = document.getElementById('searchInput');
+      i.value = '';
+      i.dispatchEvent(new Event('input'));
+      i.focus();
+    });
   });
 </script>
+
+<!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js?v=5" defer></script>
+<!-- 主程式（你先前的 js/app.js，支援首頁 renderAll + 搜尋綁定） -->
+<script src="js/app.js?v=7" defer></script>
 </body>
 </html>
