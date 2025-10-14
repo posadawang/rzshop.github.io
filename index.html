@@ -61,20 +61,47 @@
   <div class="container">© <span id="year"></span> 阿智小舖 • 僅供展示用途</div>
 </footer>
 
+<!-- ✅ LINE 浮動客服按鈕 -->
+<a href="https://lin.ee/5rGnYqx" target="_blank" class="line-float">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE">
+</a>
+
+<style>
+  .line-float {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 25px;
+    right: 25px;
+    background-color: #06C755;
+    border-radius: 50%;
+    text-align: center;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .line-float img {
+    width: 38px;
+    margin-top: 11px;
+  }
+  .line-float:hover {
+    transform: scale(1.1);
+    background-color: #09E36A;
+  }
+</style>
+
 <script>
   // 年份
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // 首頁載入：顯示全部並綁搜尋（依你現有的 js/app.js 介面）
   document.addEventListener('DOMContentLoaded', () => {
-    // 若你的 app.js 有 renderAll()/renderCategory()，直接使用
     if (typeof renderAll === 'function') {
-      renderAll(); // 顯示全部
+      renderAll();
     } else if (typeof renderCategory === 'function') {
       renderCategory('all', 'cards');
     }
 
-    // 分類按鈕切換（切換 active 樣式並呼叫 render）
     const btns = document.querySelectorAll('.cat-btn');
     btns.forEach(b => b.addEventListener('click', () => {
       btns.forEach(x => x.classList.remove('active'));
@@ -86,12 +113,10 @@
       } else {
         if (typeof renderCategory === 'function') renderCategory(cat, 'cards');
       }
-      // 保留搜尋框內容自動套用（你的 app.js 已會自動依 searchInput 再次篩選）
       const input = document.getElementById('searchInput');
       input && input.dispatchEvent(new Event('input'));
     }));
 
-    // 清除搜尋
     document.getElementById('clearBtn')?.addEventListener('click', () => {
       const i = document.getElementById('searchInput');
       i.value = '';
@@ -103,7 +128,6 @@
 
 <!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 主程式（你先前的 js/app.js，支援首頁 renderAll + 搜尋綁定） -->
 <script src="js/app.js?v=7" defer></script>
 </body>
 </html>
