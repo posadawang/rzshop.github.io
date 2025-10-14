@@ -1,90 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>商品詳情｜阿智小舖</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/styles.css" rel="stylesheet">
+  <style>
+    .thumb { cursor:pointer; border:2px solid transparent; transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+    .thumb:hover { transform:scale(1.02); border-color:#ced4da; box-shadow:0 .25rem .75rem rgba(0,0,0,.05); }
+    .thumb-active { border-color:#0d6efd!important; box-shadow:0 .5rem 1rem rgba(13,110,253,.15); }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand fw-bold" href="../index.html">
+      <img src="../assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
+    </a>
+    <!-- 購物車徽章 -->
+    <a href="../products/checkout.html" class="btn btn-outline-primary position-relative">
+      購物車
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
+    </a>
+  </div>
+</nav>
+
+<header class="py-4 bg-dark text-white">
+  <div class="container">
+    <h1 class="h4 mb-0">商品詳情</h1>
+  </div>
+</header>
+
+<main class="py-4">
+  <!-- ⚠️ 一定要有這個容器 -->
+  <div class="container" id="productContainer">
+    <!-- 載入中/錯誤訊息會顯示在這裡 -->
+  </div>
+</main>
+
+<footer class="py-4 border-top text-center small">
+  <div class="container">© <span id="year"></span> 阿智小舖</div>
+</footer>
+
 <script>
-/* ========= 超保險：內建迷你購物車，不依賴其它檔案 ========= */
-(function () {
-  const CART_KEY = 'rz_cart_v1';
+  // ====== 極簡購物車（localStorage），頁面獨立可用 ======
+  (function () {
+    const CART_KEY = 'rz_cart_v1';
+    function getCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY))||[]}catch(_){return[]} }
+    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCartBadge(); }
+    window.__rzCart = {
+      add(item, qty=1){
+        const c=getCart();
+        const i=c.findIndex(x=>x.id===item.id);
+        if(i>=0) c[i].qty+=qty; else c.push({...item, qty});
+        saveCart(c);
+      },
+      badge(){
+        const el=document.querySelector('[data-cart-badge]');
+        if(!el) return;
+        const n=getCart().reduce((s,i)=>s+i.qty,0);
+        el.textContent=n;
+      }
+    };
+    document.addEventListener('DOMContentLoaded', ()=>__rzCart.badge());
+  })();
+  // =========================================================
 
-  function getCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY))||[]}catch(_){return[]} }
-  function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCartBadge(); }
-  function addToCart(item, qty=1){
-    const c = getCart();
-    const i = c.findIndex(x=>x.id===item.id);
-    if(i>=0) c[i].qty += qty; else c.push({...item, qty});
-    saveCart(c);
-  }
-  function renderCartBadge(){
-    const el = document.querySelector('[data-cart-badge]');
-    if(!el) return;
-    const n = getCart().reduce((s,i)=>s+i.qty,0);
-    el.textContent = n;
-  }
-  window.__rzMiniCart = { addToCart, renderCartBadge }; // 讓別的頁也可用
-})();
-/* ============================================================ */
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // 每次載入先更新徽章
-  window.__rzMiniCart.renderCartBadge?.();
+  document.addEventListener('DOMContentLoaded', async () => {
+    const root = document.getElementById('productContainer');
+    if (!root) { console.error('[rz] #productContainer 不存在'); return; }
 
-  const root = document.getElementById('productContainer');
-  if(!root){ console.warn('[rz] 找不到 #productContainer'); return; }
+    // 顯示載入中
+    root.innerHTML = '<div class="text-center text-muted py-5">載入中…</div>';
 
-  // 取得網址裡的 id（例：?id=A001）
-  const id = new URLSearchParams(location.search).get('id') || '';
+    // 取得網址參數 id（例：?id=A001）
+    const id = new URLSearchParams(location.search).get('id') || '';
+    if (!id) {
+      root.innerHTML = '<div class="alert alert-warning">找不到商品編號（網址需帶 ?id=XXX）。</div>';
+      return;
+    }
 
-  // 從 items.json 撈資料（若失敗就改抓頁面上的文字）
-  let item = null;
-  try {
-    const r = await fetch('../data/items.json', {cache:'no-store'});
-    const data = await r.json();
-    const list = Array.isArray(data) ? data : (data.items||[]);
-    item = list.find(x => String(x.id) === String(id)) || null;
-  } catch(e) {
-    console.warn('[rz] 讀 items.json 失敗，將用 DOM fallback：', e);
-  }
+    // 讀取商品資料
+    let item = null;
+    try {
+      const r = await fetch('../data/items.json', { cache: 'no-store' });
+      const data = await r.json();
+      const list = Array.isArray(data) ? data : (data.items || []);
+      item = list.find(x => String(x.id) === String(id)) || null;
+    } catch (e) {
+      console.error('讀取 items.json 失敗：', e);
+      root.innerHTML = '<div class="alert alert-danger">無法載入商品資料，請稍後再試。</div>';
+      return;
+    }
 
-  // 等 renderProduct 把內容塞進來，再插入按鈕
-  const injectButtonIfNeeded = () => {
-    if(root.querySelector('.add-cart')) return; // 已有按鈕就不重塞
+    if (!item) {
+      root.innerHTML = '<div class="alert alert-warning">找不到這個商品（id：'+id+'）。</div>';
+      return;
+    }
 
-    // 嘗試從頁面抓資料當作後備
-    const titleEl = root.querySelector('h1,h2,h3,.h1,.h2,.h3') || {};
-    const priceEl = root.querySelector('.price,.h4,.fs-4,.text-danger,.product-price') || {};
-    const titleText = (item?.title) || (titleEl.textContent||document.title.replace('｜阿智小舖','')).trim();
-    const priceNum = Number(item?.price ?? (priceEl.textContent||'').replace(/[^\d.]/g,''));
+    // 準備圖片集
+    const gallery = Array.isArray(item.gallery) && item.gallery.length ? item.gallery : [item.thumbnail];
 
-    // 插入位置：價格區塊旁或右側資訊區，找不到就放 root
-    const mount = root.querySelector('.price')
-                || root.querySelector('.col-lg-5,.col-md-6:last-child,.product-actions')
-                || root;
+    // 渲染版型
+    root.innerHTML = `
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <img id="mainImage" src="${gallery[0] || item.thumbnail}" class="card-img-top" alt="${item.title}">
+          </div>
+          <div class="d-flex gap-2 mt-2 flex-wrap" id="thumbs">
+            ${gallery.map((src, idx)=>`
+              <img src="${src}" class="thumb ${idx===0?'thumb-active':''}" alt="縮圖${idx+1}" width="90" height="90" style="object-fit:cover;border-radius:.5rem;">
+            `).join('')}
+          </div>
+        </div>
 
-    // 建立按鈕
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-primary mt-3 add-cart';
-    btn.textContent = '加入購物車';
-    btn.dataset.id = item?.id || id || 'UNKNOWN';
-    btn.dataset.title = titleText || '商品';
-    btn.dataset.price = isNaN(priceNum) ? (item?.price ?? 0) : priceNum;
+        <div class="col-md-6">
+          <h2 class="h4">${item.title}</h2>
+          <div class="mb-2 text-muted">${item.category || ''}</div>
+          <div class="mb-3">
+            <span class="badge text-bg-primary me-2">編號 ${item.id}</span>
+            ${item.tags ? item.tags.map(t=>`<span class="badge text-bg-secondary me-1">${t}</span>`).join('') : ''}
+          </div>
+          <p class="lead">${item.description || ''}</p>
+          <h4 class="text-danger fw-bold">NT$ <span>${Number(item.price||0).toLocaleString()}</span></h4>
 
-    // 綁事件
-    btn.addEventListener('click', () => {
-      window.__rzMiniCart.addToCart({
-        id: btn.dataset.id,
-        title: btn.dataset.title,
-        price: Number(btn.dataset.price) || 0
-      }, 1);
-      alert('已加入購物車');
-      window.__rzMiniCart.renderCartBadge?.();
+          <div class="d-grid d-sm-flex gap-2 mt-3">
+            <button id="btnAdd" class="btn btn-primary">加入購物車</button>
+            <a class="btn btn-outline-success" target="_blank" href="https://lin.ee/5rGnYqx">LINE 客服洽詢</a>
+          </div>
+
+          <hr class="my-4">
+          <div class="small text-muted">＊本頁僅供展示，不含自動交付。下單後請加 LINE 以利後續交付及驗證。</div>
+        </div>
+      </div>
+    `;
+
+    // 縮圖切換主圖
+    const mainImage = document.getElementById('mainImage');
+    const thumbs = document.getElementById('thumbs');
+    thumbs.addEventListener('click', e=>{
+      const img = e.target.closest('img.thumb');
+      if(!img) return;
+      mainImage.src = img.src;
+      thumbs.querySelectorAll('.thumb').forEach(t=>t.classList.remove('thumb-active'));
+      img.classList.add('thumb-active');
     });
 
-    // 插入頁面
-    mount.appendChild(btn);
-  };
-
-  // 用 MutationObserver 等 renderProduct 完成
-  const obs = new MutationObserver(() => injectButtonIfNeeded());
-  obs.observe(root, {childList:true, subtree:true});
-
-  // 若 1.5 秒後還沒偵測到變化，也強制插一次（雙保險）
-  setTimeout(injectButtonIfNeeded, 1500);
-});
+    // 加入購物車
+    document.getElementById('btnAdd').addEventListener('click', ()=>{
+      __rzCart.add({
+        id: item.id,
+        title: item.title,
+        price: Number(item.price||0)
+      }, 1);
+      alert('已加入購物車');
+      __rzCart.badge();
+    });
+  });
 </script>
+
+<!--（可選）若你要用原本 app.js 的 renderProduct，也可以保留，但這頁已自給自足。-->
+<!-- <script src="../js/app.js?v=5" defer></script> -->
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
