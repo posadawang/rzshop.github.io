@@ -133,10 +133,15 @@
     "title": "B001 稀有造型帳號",
     "price": 350,
     "description": "多款限定造型，角色齊全。",
-    "thumbnail": "assets/images/b001.jpg",
+    "thumbnail": "assets/images/011.png",
     "gallery": [
-      "assets/images/b001_1.jpg",
-      "assets/images/b001_2.jpg"
+      "assets/images/011a.png",
+      "assets/images/011b.png",
+      "assets/images/011c.png",
+      "assets/images/011d.png",
+      "assets/images/011e.png",
+      "assets/images/011f.png",
+      "assets/images/011i.png",
     ],
     "link": "products/product.html?id=B001"
   },
