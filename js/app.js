@@ -1,103 +1,99 @@
-/* ===== 阿智小舖統一購物車系統 (v2) ===== */
-(function(){
-  const CART_KEY = 'rzshop_cart';
+/* ============================
+   阿智小舖主要功能腳本
+   ============================ */
 
-  window.Cart = {
-    key: CART_KEY,
-    get(){
-      try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
-      catch(e){ return []; }
-    },
-    set(list){
-      localStorage.setItem(CART_KEY, JSON.stringify(list||[]));
-    },
-    add(item){
-      const cart = this.get();
-      const idx = cart.findIndex(x => x.id === item.id);
-      if(idx > -1){
-        cart[idx].qty += (item.qty || 1);
-      }else{
-        cart.push({
-          id: item.id,
-          title: item.title,
-          price: Number(item.price) || 0,
-          qty: item.qty || 1,
-          thumbnail: item.thumbnail || ''
-        });
-      }
-      this.set(cart);
-      return cart;
-    },
-    remove(id){
-      this.set(this.get().filter(x => x.id !== id));
-    },
-    updateQty(id, qty){
-      qty = Math.max(1, Number(qty)||1);
-      const cart = this.get();
-      const idx = cart.findIndex(x => x.id === id);
-      if(idx>-1){ cart[idx].qty = qty; }
-      this.set(cart);
-    },
-    clear(){ this.set([]); },
-    total(){
-      return this.get().reduce((sum, x) => sum + x.price * x.qty, 0);
-    }
-  };
-})();
+// ---- 全域變數 ----
+const DATA_PATH = "/rzshop.github.io/data/items.json";
+const IMG_PATH = "/rzshop.github.io/";
+let allItems = [];
 
-/* ===== 首頁 / 商品卡片生成與搜尋 ===== */
-document.addEventListener('DOMContentLoaded', async () => {
-  const cardsEl = document.getElementById('cards');
-  if(!cardsEl) return; // 不在首頁就略過
+// ---- 載入全部商品 ----
+async function loadItems() {
+  if (allItems.length) return allItems;
+  const res = await fetch(`${DATA_PATH}?t=${Date.now()}`);
+  allItems = await res.json();
+  return allItems;
+}
 
-  const res = await fetch('/rzshop.github.io/data/items.json?ts=' + Date.now());
-  const items = await res.json();
+// ---- 渲染全部商品 ----
+async function renderAll() {
+  const items = await loadItems();
+  renderList(items, "cards");
+  updateCartBadge();
+}
 
-  function money(n){ return '$' + (Number(n)||0).toFixed(2); }
+// ---- 渲染指定分類 ----
+async function renderCategory(category, targetId) {
+  const items = await loadItems();
+  const filtered = category === "all" ? items : items.filter(i => i.category === category);
+  renderList(filtered, targetId);
+  updateCartBadge();
+}
 
-  function render(list){
-    cardsEl.innerHTML = list.map(p => `
-      <div class="col-12 col-md-4 col-lg-3">
-        <div class="card h-100 shadow-sm">
-          <img src="/rzshop.github.io/${p.thumbnail}" class="card-img-top" alt="">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">${p.title}</h5>
-            <p class="card-text small text-muted mb-2">${p.category}</p>
-            <div class="mt-auto">
-              <div class="fw-bold mb-2 text-primary">${money(p.price)}</div>
-              <div class="d-flex gap-2">
-                <a href="/rzshop.github.io/${p.link}" class="btn btn-outline-secondary btn-sm flex-grow-1">查看</a>
-                <button class="btn btn-primary btn-sm flex-grow-1"
-                        onclick="Cart.add({id:'${p.id}', title:'${p.title}', price:${p.price}, thumbnail:'${p.thumbnail}', qty:1});alert('已加入購物車！');">
-                  加入購物車
-                </button>
-              </div>
-            </div>
-          </div>
+// ---- 渲染商品列表 ----
+function renderList(items, targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = '<div class="text-center text-muted py-5">沒有符合條件的商品</div>';
+    return;
+  }
+  el.innerHTML = items.map(i => `
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <img src="${IMG_PATH}${i.thumbnail}" class="card-img-top" alt="${i.title}">
+        <div class="card-body d-flex flex-column">
+          <h6 class="card-title">${i.title}</h6>
+          <p class="small text-muted mb-1">${i.category}</p>
+          <div class="fw-bold text-primary mb-2">$${i.price}</div>
+          <a href="${i.link}" class="btn btn-outline-primary btn-sm mt-auto">查看詳情</a>
         </div>
       </div>
-    `).join('');
-  }
+    </div>
+  `).join('');
+}
 
-  render(items);
+// ---- 搜尋功能 ----
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadItems();
 
-  // 搜尋功能（若有 searchInput）
-  const input = document.getElementById('searchInput');
-  if(input){
-    input.addEventListener('input', ()=>{
-      const q = input.value.trim();
-      if(!q){ render(items); return; }
-      const qs = q.split(/\s+/);
-      const result = items.filter(it=>{
-        return qs.every(k =>
-          (it.id && it.id.includes(k)) ||
-          (it.title && it.title.includes(k)) ||
-          (it.category && it.category.includes(k)) ||
-          (it.description && it.description.includes(k)) ||
-          String(it.price).includes(k)
+  const input = document.getElementById("searchInput");
+  const meta = document.getElementById("resultMeta");
+  const cards = document.getElementById("cards");
+
+  if (input) {
+    input.addEventListener("input", e => {
+      const kw = e.target.value.trim();
+      const keywords = kw ? kw.split(/\s+/) : [];
+      let result = allItems;
+
+      if (keywords.length > 0) {
+        result = allItems.filter(i =>
+          keywords.some(k =>
+            i.title.includes(k) ||
+            i.id.includes(k) ||
+            i.category.includes(k) ||
+            i.description.includes(k) ||
+            String(i.price).includes(k)
+          )
         );
-      });
-      render(result);
+      }
+
+      renderList(result, "cards");
+      meta.textContent = kw ? 搜尋到 ${result.length} 筆結果 : "";
     });
   }
 });
+
+// ---- 購物車徽章更新 ----
+function updateCartBadge() {
+  const badge = document.getElementById("cartCount");
+  if (!badge) return;
+  try {
+    const list = JSON.parse(localStorage.getItem("rzshop_cart") || "[]");
+    const total = list.reduce((s, i) => s + (i.qty || 0), 0);
+    badge.textContent = total;
+  } catch {
+    badge.textContent = "0";
+  }
+}
