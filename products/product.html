@@ -8,12 +8,20 @@
   <link href="/rzshop.github.io/assets/styles.css" rel="stylesheet">
 </head>
 <body>
+
+<!-- ✅ 導覽列（含購物車顯示） -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
   <div class="container">
     <a class="navbar-brand fw-bold" href="/rzshop.github.io/">
       <img src="/rzshop.github.io/assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">
       阿智小舖
     </a>
+    <div class="ms-auto">
+      <a href="/rzshop.github.io/checkout.html" class="btn btn-outline-primary position-relative">
+        購物車
+        <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+      </a>
+    </div>
   </div>
 </nav>
 
@@ -33,92 +41,84 @@
   <div class="container">© <span id="year"></span> 阿智小舖</div>
 </footer>
 
-<script>
-document.addEventListener('DOMContentLoaded',()=> {
-  const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 統一購物車 -->
-<script src="/rzshop.github.io/js/cart.js?v=1"></script>
-
 <script>
+/* ===== 購物車核心功能 ===== */
 (function(){
+  const CART_KEY = 'rzshop_cart';
+  window.Cart = {
+    key: CART_KEY,
+    get(){ try { return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); } catch(e){ return []; } },
+    set(list){ localStorage.setItem(CART_KEY, JSON.stringify(list||[])); },
+    add(item){
+      const cart = this.get();
+      const idx = cart.findIndex(x => x.id === item.id);
+      if(idx>-1){ cart[idx].qty += (item.qty||1); } 
+      else { cart.push({...item, qty:item.qty||1}); }
+      this.set(cart);
+      return cart;
+    },
+    clear(){ localStorage.removeItem(CART_KEY); },
+    total(){ return this.get().reduce((t,i)=>t+i.price*i.qty,0); }
+  };
+})();
+
+/* ===== 年份顯示 ===== */
+document.addEventListener('DOMContentLoaded',()=>{
+  const y=document.getElementById('year');
+  if(y) y.textContent=new Date().getFullYear();
+});
+
+/* ===== 商品資料載入與按鈕功能 ===== */
+document.addEventListener('DOMContentLoaded', async ()=>{
   const host = '/rzshop.github.io';
   const el = document.getElementById('productContainer');
+  const id = new URLSearchParams(location.search).get('id');
+  if(!id){ el.innerHTML='<div class="alert alert-danger">無效的商品連結</div>'; return; }
 
-  function money(n){ return '$' + (Number(n)||0).toFixed(2); }
-  function qs(key){ return new URLSearchParams(location.search).get(key); }
+  const res = await fetch(`${host}/data/items.json?ts=${Date.now()}`);
+  const items = await res.json();
+  const item = items.find(x=>String(x.id)===id);
+  if(!item){ el.innerHTML='<div class="alert alert-warning">找不到商品</div>'; return; }
 
-  async function loadItem(){
-    const id = qs('id');
-    if(!id){ el.innerHTML = '<div class="alert alert-danger">缺少商品編號</div>'; return; }
-
-    const res = await fetch(`${host}/data/items.json?ts=${Date.now()}`);
-    const items = await res.json();
-    const item = items.find(x => String(x.id) === String(id));
-    if(!item){ el.innerHTML = '<div class="alert alert-warning">找不到商品</div>'; return; }
-
-    const gallery = Array.isArray(item.gallery) && item.gallery.length ? item.gallery : [item.thumbnail];
-
-    el.innerHTML = `
-      <div class="row g-4">
-        <div class="col-12 col-lg-6">
-          <img id="mainImg" src="${host}/${gallery[0]}" class="img-fluid rounded w-100 mb-3" alt="">
-          <div class="d-flex flex-wrap gap-2">
-            ${gallery.map((src,i)=>`
-              <img src="${host}/${src}" class="img-thumbnail" style="width:88px;height:88px;object-fit:cover;cursor:pointer"
-                   data-role="thumb" data-src="${host}/${src}">
-            `).join('')}
-          </div>
-        </div>
-        <div class="col-12 col-lg-6">
-          <h2 class="h4">${item.title}</h2>
-          <div class="text-muted mb-2">${item.id} ｜ ${item.category}</div>
-          <div class="fs-4 text-primary mb-3">${money(item.price)}</div>
-          <p class="mb-4">${item.description || ''}</p>
-
-          <div class="input-group mb-3" style="max-width:220px">
-            <span class="input-group-text">數量</span>
-            <input id="qtyInput" type="number" min="1" value="1" class="form-control text-end">
-          </div>
-
-          <div class="d-flex flex-wrap gap-2">
-            <button id="addBtn" class="btn btn-primary">加入購物車</button>
-            <a href="${host}/checkout.html" class="btn btn-outline-secondary">前往結帳</a>
-          </div>
-        </div>
+  el.innerHTML = `
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <img src="${host}/${item.thumbnail}" class="img-fluid rounded w-100 mb-3">
       </div>
-    `;
+      <div class="col-lg-6">
+        <h2>${item.title}</h2>
+        <div class="text-primary fs-4 mb-3">$${item.price}</div>
+        <p>${item.description||''}</p>
+        <div class="input-group mb-3" style="max-width:200px">
+          <span class="input-group-text">數量</span>
+          <input id="qtyInput" type="number" min="1" value="1" class="form-control text-end">
+        </div>
+        <button id="addBtn" class="btn btn-primary">加入購物車</button>
+        <a href="/rzshop.github.io/checkout.html" class="btn btn-outline-secondary ms-2">前往結帳</a>
+      </div>
+    </div>
+  `;
 
-    // 縮圖切換
-    el.querySelectorAll('[data-role="thumb"]').forEach(img=>{
-      img.addEventListener('click', ()=>{
-        el.querySelector('#mainImg').src = img.dataset.src;
-      });
-    });
+  // 加入購物車按鈕
+  el.querySelector('#addBtn').addEventListener('click',()=>{
+    const qty = Math.max(1, Number(document.getElementById('qtyInput').value)||1);
+    Cart.add({id:item.id,title:item.title,price:item.price,thumbnail:item.thumbnail,qty});
+    alert('已加入購物車！');
+    updateBadge();
+  });
 
-    // 加入購物車
-    el.querySelector('#addBtn').addEventListener('click', ()=>{
-      const qty = Math.max(1, Number(document.getElementById('qtyInput').value) || 1);
-      Cart.add({
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        qty,
-        thumbnail: item.thumbnail
-      });
-      const ok = document.createElement('div');
-      ok.className = 'alert alert-success mt-3';
-      ok.textContent = '已加入購物車！你可以繼續選購或前往結帳。';
-      el.appendChild(ok);
-      setTimeout(()=> ok.remove(), 2000);
-    });
-  }
+  updateBadge();
+});
 
-  loadItem();
-})();
+/* ===== 購物車徽章數量 ===== */
+function updateBadge(){
+  const badge = document.getElementById('cartCount');
+  if(!badge) return;
+  const total = Cart.get().reduce((s,i)=>s+i.qty,0);
+  badge.textContent = total;
+}
 </script>
 </body>
 </html>
