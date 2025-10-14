@@ -5,111 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>結帳｜阿智小舖</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- PayPal SDK：使用你的 Sandbox Client ID -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AQW6evNLgJ7tudOvNEMdEEWU5_Qb7r9zCHqNv6U2AhhKW4zk3z7cgCvTvWbO1AQGoFROhQnbBLEl4c-C&currency=USD"></script>
+
+  <style>
+    body { font-family: "Noto Sans TC", sans-serif; background-color: #f8f9fa; }
+    .container { max-width: 720px; margin-top: 60px; }
+  </style>
 </head>
-<body class="bg-light">
-<nav class="navbar bg-body-tertiary shadow-sm">
-  <div class="container d-flex justify-content-between align-items-center">
-    <a class="navbar-brand fw-bold" href="../index.html">阿智小舖</a>
 
-    <!-- 🛒 購物車徽章 -->
-    <a href="../products/checkout.html" class="btn btn-outline-primary position-relative">
-      購物車
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
-    </a>
-  </div>
-</nav>
+<body>
+  <div class="container text-center">
+    <h2 class="mb-4 fw-bold">💳 阿智小舖 結帳測試頁</h2>
+    <p class="text-muted mb-4">使用 PayPal Sandbox 模式進行測試付款。</p>
 
-<main class="container py-4">
-  <h1 class="h4 mb-3">購物車</h1>
-  <div id="list" class="mb-3"></div>
+    <div class="card shadow-sm p-4">
+      <h5>訂單總金額：</h5>
+      <h2 id="totalAmount" class="text-success mb-4">$10.00 USD</h2>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <strong>總金額</strong>
-    <strong id="total" class="fs-5"></strong>
+      <!-- PayPal 按鈕容器 -->
+      <div id="paypal-button-container"></div>
+
+      <div id="resultMsg" class="mt-3 text-success fw-semibold"></div>
+    </div>
   </div>
 
-  <h2 class="h6">選擇付款方式</h2>
+  <script>
+    // 模擬測試金額（之後可改成你的購物車金額）
+    const total = 10.00;
 
-  <!-- 💳 PayPal 按鈕區 -->
-  <div class="mb-3" id="paypal-button-container"></div>
+    paypal.Buttons({
+      style: {
+        layout: 'vertical',
+        color: 'gold',
+        shape: 'rect',
+        label: 'paypal'
+      },
 
-  <!-- 💬 LINE 聯絡客服 -->
-  <a class="btn btn-success w-100" target="_blank" href="https://lin.ee/5rGnYqx">
-    LINE 客服下單
-  </a>
-</main>
+      // 建立訂單（測試）
+      createOrder: (data, actions) => {
+        return actions.order.create({
+          purchase_units: [{
+            description: '阿智小舖 測試訂單',
+            amount: { value: total.toFixed(2), currency_code: 'USD' }
+          }]
+        });
+      },
 
-<footer class="py-4 border-top text-center small">
-  <div class="container">© <span id="year"></span> 阿智小舖</div>
-</footer>
+      // 付款成功
+      onApprove: async (data, actions) => {
+        const order = await actions.order.capture();
+        console.log('✅ 付款成功', order);
+        document.getElementById('resultMsg').textContent = '付款成功 ✅ 訂單編號：' + order.id;
+        alert('付款成功！訂單編號：' + order.id);
+      },
 
-<!-- 🧾 JS 腳本區 -->
-<script type="module">
-  import { getCart, removeFromCart, clearCart, cartTotal, renderCartBadge } from '../js/cart.js';
+      // 付款失敗
+      onError: (err) => {
+        console.error('❌ 付款失敗', err);
+        alert('付款失敗，請稍後再試。');
+      }
 
-  const list = document.getElementById('list');
-  const totalEl = document.getElementById('total');
-  const yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  function render() {
-    const cart = getCart();
-    renderCartBadge();
-
-    if (!cart.length) {
-      list.innerHTML = '<div class="alert alert-info">購物車是空的。</div>';
-      totalEl.textContent = 'NT$ 0';
-      return;
-    }
-
-    list.innerHTML = cart.map(i => `
-      <div class="card mb-2">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">${i.title}</div>
-            <div class="text-muted small">NT$${i.price} × ${i.qty}</div>
-          </div>
-          <button class="btn btn-sm btn-outline-danger" data-del="${i.id}">移除</button>
-        </div>
-      </div>
-    `).join('');
-
-    totalEl.textContent = 'NT$ ' + cartTotal().toLocaleString();
-  }
-
-  list.addEventListener('click', e => {
-    const del = e.target.closest('[data-del]');
-    if (!del) return;
-    removeFromCart(del.dataset.del);
-    render();
-  });
-
-  render();
-</script>
-
-<!-- ✅ PayPal SDK（測試用 Sandbox） -->
-<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=TWD"></script>
-<script type="module">
-  import { clearCart, cartTotal } from '../js/cart.js';
-
-  paypal.Buttons({
-    createOrder: (data, actions) => {
-      const amount = (cartTotal() || 0).toFixed(2);
-      return actions.order.create({
-        purchase_units: [{ amount: { value: amount } }]
-      });
-    },
-    onApprove: async (data, actions) => {
-      await actions.order.capture();
-      clearCart();
-      alert('付款成功！我們將於 LINE 聯繫您。');
-      location.href = '../index.html';
-    }
-  }).render('#paypal-button-container');
-</script>
-
-<!-- Bootstrap -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    }).render('#paypal-button-container');
+  </script>
 </body>
 </html>
-
