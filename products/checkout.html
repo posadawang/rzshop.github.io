@@ -6,35 +6,39 @@
   <title>結帳｜阿智小舖</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/rzshop.github.io/assets/styles.css" rel="stylesheet">
+  <style>
+    .cart-img { width: 70px; height: 70px; object-fit: cover; }
+  </style>
 </head>
 <body>
 
-<!-- ✅ 導覽列 -->
+<!-- 導覽列 -->
 <nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top">
   <div class="container">
     <a class="navbar-brand fw-bold" href="/rzshop.github.io/">
       <img src="/rzshop.github.io/assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">
       阿智小舖
     </a>
-    <div class="ms-auto text-white">結帳</div>
+    <div class="ms-auto">
+      <a href="/rzshop.github.io/checkout.html" class="btn btn-outline-light position-relative">
+        購物車
+        <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+      </a>
+    </div>
   </div>
 </nav>
 
 <main class="py-4">
   <div class="container" style="max-width:960px">
-    <div class="card mb-3">
-      <div class="card-header">購物車</div>
-      <div class="card-body" id="cartBody">
-        <div class="text-center text-muted my-4">載入中...</div>
-      </div>
-    </div>
+    <h3 class="mb-3">🛒 購物車內容</h3>
+    <div id="cartBody" class="mb-4"></div>
 
     <div class="card">
-      <div class="card-header">付款</div>
+      <div class="card-header fw-bold">付款方式</div>
       <div class="card-body">
-        <p>付款成功後，我們將透過 <a href="https://lin.ee/5rGnYqx" target="_blank">LINE 官方帳號</a> 與您聯繫帳號交付。</p>
+        <p>付款完成後，請透過 <a href="https://lin.ee/5rGnYqx" target="_blank">LINE 官方帳號</a> 聯絡客服，我們會儘快交付帳號。</p>
         <div id="paypal-button-container" class="mt-3"></div>
-        <a href="/rzshop.github.io/" class="btn btn-outline-secondary mt-3">← 返回商店</a>
+        <a href="/rzshop.github.io/" class="btn btn-outline-secondary mt-3">← 回到商店</a>
       </div>
     </div>
   </div>
@@ -48,42 +52,85 @@
 <script>
 /* ===== 購物車核心 ===== */
 (function(){
-  const CART_KEY = 'rzshop_cart';
-  window.Cart = {
-    key:CART_KEY,
-    get(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}catch(e){return[];}},
-    set(l){localStorage.setItem(CART_KEY,JSON.stringify(l||[]));},
-    clear(){localStorage.removeItem(CART_KEY);},
+  const KEY='rzshop_cart';
+  window.Cart={
+    get(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];}},
+    set(l){localStorage.setItem(KEY,JSON.stringify(l||[]));},
+    clear(){localStorage.removeItem(KEY);},
+    add(item){
+      const list=this.get();
+      const i=list.findIndex(x=>x.id===item.id);
+      if(i>-1) list[i].qty+=item.qty||1;
+      else list.push({...item,qty:item.qty||1});
+      this.set(list);
+      return list;
+    },
+    remove(id){
+      const list=this.get().filter(x=>x.id!==id);
+      this.set(list);
+      return list;
+    },
     total(){return this.get().reduce((s,i)=>s+i.price*i.qty,0);}
   };
 })();
 
-/* ===== 結帳頁顯示 ===== */
+/* ===== 年份與載入 ===== */
 document.addEventListener('DOMContentLoaded',()=>{
   const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
   renderCart();
 });
 
+/* ===== 渲染購物車 ===== */
 function renderCart(){
-  const list = Cart.get();
-  const body = document.getElementById('cartBody');
-  if(!list.length){
-    body.innerHTML = '<div class="alert alert-warning">購物車為空，請返回選購商品。</div>';
+  const body=document.getElementById('cartBody');
+  const cart=Cart.get();
+  const badge=document.getElementById('cartCount');
+  badge.textContent=cart.reduce((a,i)=>a+i.qty,0);
+
+  if(cart.length===0){
+    body.innerHTML='<div class="alert alert-warning text-center">購物車是空的，回去挑選商品吧！</div>';
     return;
   }
-  body.innerHTML = list.map(i=>`
-    <div class="row align-items-center py-2 border-bottom">
-      <div class="col-2"><img src="/rzshop.github.io/${i.thumbnail}" class="img-fluid rounded"></div>
-      <div class="col-6">${i.title}</div>
-      <div class="col-2 text-end">$${i.price}</div>
-      <div class="col-2 text-end">x${i.qty}</div>
-    </div>
-  `).join('') + `<div class="text-end fw-bold fs-5 mt-3">合計：$${Cart.total().toFixed(2)}</div>`;
+
+  body.innerHTML=`
+    <table class="table align-middle">
+      <thead><tr><th>商品</th><th>名稱</th><th>價格</th><th>數量</th><th>小計</th><th></th></tr></thead>
+      <tbody>
+        ${cart.map(i=>`
+          <tr>
+            <td><img src="/rzshop.github.io/${i.thumbnail}" class="cart-img rounded"></td>
+            <td>${i.title}</td>
+            <td>$${i.price}</td>
+            <td><input type="number" class="form-control qty-input" data-id="${i.id}" value="${i.qty}" min="1" style="width:80px"></td>
+            <td>$${(i.price*i.qty).toFixed(2)}</td>
+            <td><button class="btn btn-sm btn-danger del-btn" data-id="${i.id}">刪除</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="text-end fw-bold fs-5">合計：$${Cart.total().toFixed(2)}</div>
+  `;
+
+  // 綁定刪除
+  body.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',()=>{
+    Cart.remove(b.dataset.id);
+    renderCart();
+  }));
+
+  // 綁定數量變更
+  body.querySelectorAll('.qty-input').forEach(inp=>inp.addEventListener('change',()=>{
+    const val=Math.max(1,parseInt(inp.value)||1);
+    const list=Cart.get();
+    const i=list.find(x=>x.id===inp.dataset.id);
+    if(i){i.qty=val;Cart.set(list);}
+    renderCart();
+  }));
 }
 
 /* ===== PayPal ===== */
 </script>
-<!-- ⚠️ 將下面 CLIENT ID 改成你自己的 Live ID -->
+
+<!-- ⚠️ 把這裡換成你的 Live Client ID -->
 <script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&currency=TWD"></script>
 <script>
 paypal.Buttons({
@@ -94,7 +141,7 @@ paypal.Buttons({
   },
   onApprove: (data, actions)=>{
     return actions.order.capture().then(function(details){
-      alert('付款成功，感謝 ' + details.payer.name.given_name + '！');
+      alert('付款成功！感謝 ' + details.payer.name.given_name + '！');
       Cart.clear();
       location.href='/rzshop.github.io/thankyou.html';
     });
