@@ -289,17 +289,3 @@
     "link": "products/product.html?id=D003"
   }
 ]
-/* 商品詳情縮圖高亮 */
-.thumb {
-  border: 2px solid transparent;
-  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-}
-.thumb:hover {
-  transform: scale(1.02);
-  border-color: #ced4da;
-  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.05);
-}
-.thumb-active {
-  border-color: #0d6efd !important;
-  box-shadow: 0 0.5rem 1rem rgba(13,110,253,.15);
-}
