@@ -5,34 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>商品詳情｜阿智小舖</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../assets/styles.css" rel="stylesheet">
-  <style>
-    .thumb {
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-    }
-    .thumb:hover {
-      transform: scale(1.02);
-      border-color: #ced4da;
-      box-shadow: 0 .25rem .75rem rgba(0,0,0,.05);
-    }
-    .thumb-active {
-      border-color: #0d6efd !important;
-      box-shadow: 0 .5rem 1rem rgba(13,110,253,.15);
-    }
-  </style>
+  <link href="/rzshop.github.io/assets/styles.css" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container d-flex justify-content-between align-items-center">
-    <a class="navbar-brand fw-bold" href="../index.html">
-      <img src="../assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
-    </a>
-    <!-- 購物車徽章 -->
-    <a href="../products/checkout.html" class="btn btn-outline-primary position-relative">
-      購物車
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/rzshop.github.io/">
+      <img src="/rzshop.github.io/assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">
+      阿智小舖
     </a>
   </div>
 </nav>
@@ -44,7 +24,9 @@
 </header>
 
 <main class="py-4">
-  <div class="container" id="productContainer"></div>
+  <div class="container" id="productContainer">
+    <div class="text-center text-muted my-5">載入中…</div>
+  </div>
 </main>
 
 <footer class="py-4 border-top text-center small">
@@ -52,117 +34,91 @@
 </footer>
 
 <script>
-  // ====== 超簡易購物車（localStorage） ======
-  (function () {
-    const CART_KEY = 'rz_cart_v1';
-    function getCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY))||[]}catch(_){return[]} }
-    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderBadge(); }
-    function renderBadge(){
-      const el=document.querySelector('[data-cart-badge]');
-      if(!el) return;
-      const n=getCart().reduce((s,i)=>s+i.qty,0);
-      el.textContent=n;
-    }
-    window.__rzCart = {
-      add(item, qty=1){
-        const c=getCart();
-        const i=c.findIndex(x=>x.id===item.id);
-        if(i>=0) c[i].qty+=qty; else c.push({...item, qty});
-        saveCart(c);
-      },
-      badge: renderBadge
-    };
-    document.addEventListener('DOMContentLoaded', renderBadge);
-  })();
-  // ============================================
+document.addEventListener('DOMContentLoaded',()=> {
+  const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  document.getElementById('year').textContent = new Date().getFullYear();
+<!-- 統一購物車 -->
+<script src="/rzshop.github.io/js/cart.js?v=1"></script>
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const root = document.getElementById('productContainer');
-    if (!root) return;
+<script>
+(function(){
+  const host = '/rzshop.github.io';
+  const el = document.getElementById('productContainer');
 
-    root.innerHTML = '<div class="text-center text-muted py-5">載入中...</div>';
+  function money(n){ return '$' + (Number(n)||0).toFixed(2); }
+  function qs(key){ return new URLSearchParams(location.search).get(key); }
 
-    const id = new URLSearchParams(location.search).get('id') || '';
-    if (!id) {
-      root.innerHTML = '<div class="alert alert-warning">找不到商品編號（網址需帶 ?id=XXX）。</div>';
-      return;
-    }
+  async function loadItem(){
+    const id = qs('id');
+    if(!id){ el.innerHTML = '<div class="alert alert-danger">缺少商品編號</div>'; return; }
 
-    let item = null;
-    try {
-      const res = await fetch('../data/items.json', { cache: 'no-store' });
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : (data.items || []);
-      item = list.find(x => String(x.id) === String(id)) || null;
-    } catch (e) {
-      root.innerHTML = '<div class="alert alert-danger">無法載入商品資料。</div>';
-      console.error(e);
-      return;
-    }
-
-    if (!item) {
-      root.innerHTML = `<div class="alert alert-warning">找不到這個商品（id：${id}）。</div>`;
-      return;
-    }
+    const res = await fetch(`${host}/data/items.json?ts=${Date.now()}`);
+    const items = await res.json();
+    const item = items.find(x => String(x.id) === String(id));
+    if(!item){ el.innerHTML = '<div class="alert alert-warning">找不到商品</div>'; return; }
 
     const gallery = Array.isArray(item.gallery) && item.gallery.length ? item.gallery : [item.thumbnail];
 
-    root.innerHTML = `
+    el.innerHTML = `
       <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card shadow-sm">
-            <img id="mainImage" src="../${gallery[0]}" class="card-img-top" alt="${item.title}">
-          </div>
-          <div class="d-flex gap-2 mt-2 flex-wrap" id="thumbs">
-            ${gallery.map((src, idx) => `
-              <img src="../${src}" class="thumb ${idx===0?'thumb-active':''}" alt="縮圖${idx+1}" width="90" height="90" style="object-fit:cover;border-radius:.5rem;">
+        <div class="col-12 col-lg-6">
+          <img id="mainImg" src="${host}/${gallery[0]}" class="img-fluid rounded w-100 mb-3" alt="">
+          <div class="d-flex flex-wrap gap-2">
+            ${gallery.map((src,i)=>`
+              <img src="${host}/${src}" class="img-thumbnail" style="width:88px;height:88px;object-fit:cover;cursor:pointer"
+                   data-role="thumb" data-src="${host}/${src}">
             `).join('')}
           </div>
         </div>
-
-        <div class="col-md-6">
+        <div class="col-12 col-lg-6">
           <h2 class="h4">${item.title}</h2>
-          <div class="mb-2 text-muted">${item.category}</div>
-          <div class="mb-3">
-            <span class="badge text-bg-primary me-2">編號 ${item.id}</span>
-          </div>
-          <p class="lead">${item.description}</p>
-          <h4 class="text-danger fw-bold">NT$ ${Number(item.price).toLocaleString()}</h4>
+          <div class="text-muted mb-2">${item.id} ｜ ${item.category}</div>
+          <div class="fs-4 text-primary mb-3">${money(item.price)}</div>
+          <p class="mb-4">${item.description || ''}</p>
 
-          <div class="d-grid d-sm-flex gap-2 mt-3">
-            <button id="btnAdd" class="btn btn-primary">加入購物車</button>
-            <a class="btn btn-outline-success" target="_blank" href="https://lin.ee/5rGnYqx">LINE 客服洽詢</a>
+          <div class="input-group mb-3" style="max-width:220px">
+            <span class="input-group-text">數量</span>
+            <input id="qtyInput" type="number" min="1" value="1" class="form-control text-end">
           </div>
 
-          <hr class="my-4">
-          <div class="small text-muted">＊本頁僅供展示，下單後請加 LINE 以利後續交付。</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button id="addBtn" class="btn btn-primary">加入購物車</button>
+            <a href="${host}/checkout.html" class="btn btn-outline-secondary">前往結帳</a>
+          </div>
         </div>
       </div>
     `;
 
-    const mainImage = document.getElementById('mainImage');
-    document.getElementById('thumbs').addEventListener('click', e => {
-      const img = e.target.closest('img.thumb');
-      if (!img) return;
-      mainImage.src = img.src;
-      document.querySelectorAll('.thumb').forEach(t => t.classList.remove('thumb-active'));
-      img.classList.add('thumb-active');
+    // 縮圖切換
+    el.querySelectorAll('[data-role="thumb"]').forEach(img=>{
+      img.addEventListener('click', ()=>{
+        el.querySelector('#mainImg').src = img.dataset.src;
+      });
     });
 
-    document.getElementById('btnAdd').addEventListener('click', () => {
-      __rzCart.add({
+    // 加入購物車
+    el.querySelector('#addBtn').addEventListener('click', ()=>{
+      const qty = Math.max(1, Number(document.getElementById('qtyInput').value) || 1);
+      Cart.add({
         id: item.id,
         title: item.title,
-        price: Number(item.price)
-      }, 1);
-      alert('已加入購物車');
-      __rzCart.badge();
+        price: item.price,
+        qty,
+        thumbnail: item.thumbnail
+      });
+      const ok = document.createElement('div');
+      ok.className = 'alert alert-success mt-3';
+      ok.textContent = '已加入購物車！你可以繼續選購或前往結帳。';
+      el.appendChild(ok);
+      setTimeout(()=> ok.remove(), 2000);
     });
-  });
-</script>
+  }
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  loadItem();
+})();
+</script>
 </body>
 </html>
