@@ -36,7 +36,8 @@
     <div class="card">
       <div class="card-header fw-bold">付款方式</div>
       <div class="card-body">
-        <p>付款完成後，請透過 <a href="https://lin.ee/5rGnYqx" target="_blank">LINE 官方帳號</a> 聯絡客服，我們會儘快交付帳號。</p>
+        <p>付款完成後，請透過 
+          <a href="https://lin.ee/5rGnYqx" target="_blank">LINE 官方帳號</a> 聯絡客服，我們會儘快交付帳號。</p>
         <div id="paypal-button-container" class="mt-3"></div>
         <a href="/rzshop.github.io/" class="btn btn-outline-secondary mt-3">← 回到商店</a>
       </div>
@@ -130,8 +131,8 @@ function renderCart(){
 /* ===== PayPal ===== */
 </script>
 
-<!-- ⚠️ 把這裡換成你的 Live Client ID -->
-<script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&currency=TWD"></script>
+<!-- ✅ 這裡已幫你換成你的 Live Client ID -->
+<script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6yYpUs_ZJp1j-McFXzZHOeNUdTsba8DiO13slQugPkVHFKCgw281CbFe-T&currency=TWD"></script>
 <script>
 paypal.Buttons({
   createOrder: (data, actions)=>{
