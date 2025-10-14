@@ -10,14 +10,13 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container">
-    <a class="navbar-brand fw-bold" href="/rzshop.github.io/">
-      <img src="assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
-      <a href="products/checkout.html" class="btn btn-outline-primary position-relative ms-auto">
-  購物車
-  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
-</a>
-
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="/rzshop.github.io/">
+      <img src="assets/images/rzshopp.jpg" alt="阿智小舖" width="28" height="28" class="me-2">阿智小舖
+    </a>
+    <a href="/rzshop.github.io/checkout.html" class="btn btn-outline-primary position-relative">
+      購物車
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount" data-cart-badge>0</span>
     </a>
   </div>
 </nav>
@@ -96,37 +95,33 @@
 </style>
 
 <script>
-  // 年份
-  document.getElementById('year').textContent = new Date().getFullYear();
-
   // 首頁載入：顯示全部並綁搜尋（依你現有的 js/app.js 介面）
-  document.addEventListener('DOMContentLoaded', () => {
-    if (typeof renderAll === 'function') {
-      renderAll();
-    } else if (typeof renderCategory === 'function') {
-      renderCategory('all', 'cards');
-    }
+  document.addEventListener('DOMContentLoaded', async () => {
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    const btns = document.querySelectorAll('.cat-btn');
-    btns.forEach(b => b.addEventListener('click', () => {
-      btns.forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      const cat = b.getAttribute('data-cat');
-      if (cat === 'all') {
-        if (typeof renderAll === 'function') renderAll();
-        else if (typeof renderCategory === 'function') renderCategory('all', 'cards');
-      } else {
-        if (typeof renderCategory === 'function') renderCategory(cat, 'cards');
-      }
-      const input = document.getElementById('searchInput');
-      input && input.dispatchEvent(new Event('input'));
-    }));
+    const searchInput = document.getElementById('searchInput');
+    let currentCategory = 'all';
+    const controller = await bindSearch(currentCategory, 'cards', 'searchInput', 'resultMeta');
+
+    const buttons = document.querySelectorAll('.cat-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        buttons.forEach(x => x.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.getAttribute('data-cat') || 'all';
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        await controller.setCategory(currentCategory);
+      });
+    });
 
     document.getElementById('clearBtn')?.addEventListener('click', () => {
-      const i = document.getElementById('searchInput');
-      i.value = '';
-      i.dispatchEvent(new Event('input'));
-      i.focus();
+      if (!searchInput) return;
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.focus();
     });
   });
 </script>
