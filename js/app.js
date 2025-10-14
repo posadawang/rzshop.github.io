@@ -1,74 +1,119 @@
-// 渲染商品詳情（替換整段）
-async function renderProduct(detailContainerId = 'productContainer') {
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  if (!id) return;
+/* js/app.js */
 
-  const data = await loadItems();
-  const item = data.find(i => i.id === id);
+const PATHS = [
+  // 在 /games 或 /products 頁面時會用到
+  '../data/items.json',
+  // 在根目錄頁（index.html）
+  './data/items.json',
+  // 絕對路徑（GitHub Pages 容錯）
+  '/data/items.json'
+];
 
-  const el = document.getElementById(detailContainerId);
-  if (!item) { 
-    el.innerHTML = `<div class="alert alert-warning">找不到該商品（${id}）。</div>`; 
-    return; 
+async function fetchItems() {
+  for (const p of PATHS) {
+    try {
+      const r = await fetch(p, { cache: 'no-store' });
+      if (r.ok) return await r.json();
+    } catch (e) {}
   }
+  throw new Error('items.json 無法載入，請檢查路徑或 JSON 格式。');
+}
 
-  // 產生縮圖 HTML，先不綁事件，稍後一次綁
-  const galleryImgs = (item.gallery || []).map((src, idx) => `
-    <img 
-      src="../${src}" 
-      data-full="../${src}"
-      class="img-thumbnail me-2 mb-2 thumb ${idx===0 ? 'thumb-active' : ''}" 
-      style="width:120px;height:120px;object-fit:cover;cursor:pointer"
-      alt="${item.title} - 圖片${idx+1}"
-      onerror="this.src='https://via.placeholder.com/300x300?text=${item.id}'">
-  `).join('');
+function nt(num) {
+  return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(num);
+}
 
-  // 主圖先用 thumbnail，若有 gallery 就預設用第一張
-  const firstFull = (item.gallery && item.gallery.length) ? `../${item.gallery[0]}` : `../${item.thumbnail}`;
+/** 渲染某個分類的商品清單到指定容器 */
+async function renderCategory(category, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
 
-  el.innerHTML = `
-    <h2 class="fw-bold mb-2">${item.title}</h2>
-    <div class="mb-3 text-primary fs-5">NT$ ${item.price}</div>
-    <p class="text-muted">${item.description}</p>
-
-    <div class="mb-3">
-      <img id="mainImage" src="${firstFull}" class="img-fluid rounded shadow-sm" alt="${item.title}"
-           onerror="this.src='https://via.placeholder.com/800x500?text=${item.id}'">
-    </div>
-
-    <h6 class="mt-4 mb-2">更多圖片</h6>
-    <div id="thumbBar" class="d-flex flex-wrap">${galleryImgs || '<span class="text-muted">（尚無更多圖片）</span>'}</div>
-
-    <div class="mt-4">
-      <a href="javascript:history.back()" class="btn btn-outline-secondary">← 返回</a>
-    </div>
-  `;
-
-  // 綁定縮圖點擊 → 切換主圖、更新 active 樣式
-  const mainImage = document.getElementById('mainImage');
-  const thumbs = el.querySelectorAll('.thumb');
-
-  thumbs.forEach(t => {
-    t.addEventListener('click', () => {
-      const full = t.getAttribute('data-full') || t.src;
-      mainImage.src = full;
-      thumbs.forEach(x => x.classList.remove('thumb-active'));
-      t.classList.add('thumb-active');
-    });
-  });
-
-  // 額外：左右方向鍵切換
-  document.addEventListener('keydown', (e) => {
-    if (!thumbs.length) return;
-    const arr = Array.from(thumbs);
-    let idx = arr.findIndex(x => x.classList.contains('thumb-active'));
-    if (e.key === 'ArrowRight') {
-      idx = (idx + 1) % arr.length;
-      arr[idx].click();
-    } else if (e.key === 'ArrowLeft') {
-      idx = (idx - 1 + arr.length) % arr.length;
-      arr[idx].click();
+  try {
+    const items = await fetchItems();
+    const list = items.filter(x => x.category === category);
+    if (!list.length) {
+      el.innerHTML = `<div class="text-muted">目前沒有商品。</div>`;
+      return;
     }
-  });
+
+    el.innerHTML = list.map(item => `
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <img src="../${item.thumbnail}" class="card-img-top ratio-16x9 object-cover" alt="${item.title}" onerror="this.src='../assets/images/placeholder.jpg'">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${item.id}｜${item.title}</h5>
+            <p class="card-text text-muted small flex-grow-1">${item.description ?? ''}</p>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <span class="fw-bold text-primary">${nt(item.price)}</span>
+              <a href="../${item.link}" class="btn btn-sm btn-outline-primary">查看詳情</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = `<div class="alert alert-danger">讀取商品失敗。${err.message}</div>`;
+  }
+}
+
+/** 讀詳情頁（依 ?id=XXX）並渲染主圖 + 縮圖可切換 */
+async function renderProduct(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  const url = new URL(location.href);
+  const id = url.searchParams.get('id');
+  if (!id) { el.innerHTML = `<div class="alert alert-warning">缺少 id。</div>`; return; }
+
+  try {
+    const items = await fetchItems();
+    const item = items.find(x => x.id === id);
+    if (!item) { el.innerHTML = `<div class="alert alert-warning">找不到商品：${id}</div>`; return; }
+
+    const gallery = item.gallery ?? [];
+    const main = gallery.length ? gallery[0] : item.thumbnail;
+
+    el.innerHTML = `
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <img id="mainImg" src="../${main}" class="w-100 rounded shadow-sm object-contain" alt="${item.title}"
+               onerror="this.src='../assets/images/placeholder.jpg'">
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            ${[main, ...gallery.filter(g => g !== main)]
+              .map((src, i) => `
+                <img src="../${src}" class="thumb rounded ${i===0?'thumb-active':''}" alt="thumb"
+                     style="width:90px;height:90px;object-fit:cover;cursor:pointer;"
+                     onerror="this.src='../assets/images/placeholder.jpg'">
+              `).join('')}
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <h2 class="h4 mb-1">${item.id}｜${item.title}</h2>
+          <div class="text-primary fw-bold fs-4 mb-3">${nt(item.price)}</div>
+          <p class="text-muted">${item.description ?? ''}</p>
+          <div class="small text-secondary">分類：${item.category}</div>
+
+          <div class="mt-4">
+            <a class="btn btn-outline-secondary" href="javascript:history.back()">← 返回上一頁</a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 縮圖點擊切換主圖 + 高亮
+    const mainImg = document.getElementById('mainImg');
+    el.querySelectorAll('.thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        mainImg.src = thumb.src;
+        el.querySelectorAll('.thumb').forEach(t => t.classList.remove('thumb-active'));
+        thumb.classList.add('thumb-active');
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = `<div class="alert alert-danger">讀取商品失敗。${err.message}</div>`;
+  }
 }
