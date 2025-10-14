@@ -1,1 +1,115 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>結帳｜阿智小舖</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar bg-body-tertiary shadow-sm">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand fw-bold" href="../index.html">阿智小舖</a>
+
+    <!-- 🛒 購物車徽章 -->
+    <a href="../products/checkout.html" class="btn btn-outline-primary position-relative">
+      購物車
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
+    </a>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <h1 class="h4 mb-3">購物車</h1>
+  <div id="list" class="mb-3"></div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <strong>總金額</strong>
+    <strong id="total" class="fs-5"></strong>
+  </div>
+
+  <h2 class="h6">選擇付款方式</h2>
+
+  <!-- 💳 PayPal 按鈕區 -->
+  <div class="mb-3" id="paypal-button-container"></div>
+
+  <!-- 💬 LINE 聯絡客服 -->
+  <a class="btn btn-success w-100" target="_blank" href="https://lin.ee/5rGnYqx">
+    LINE 客服下單
+  </a>
+</main>
+
+<footer class="py-4 border-top text-center small">
+  <div class="container">© <span id="year"></span> 阿智小舖</div>
+</footer>
+
+<!-- 🧾 JS 腳本區 -->
+<script type="module">
+  import { getCart, removeFromCart, clearCart, cartTotal, renderCartBadge } from '../js/cart.js';
+
+  const list = document.getElementById('list');
+  const totalEl = document.getElementById('total');
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  function render() {
+    const cart = getCart();
+    renderCartBadge();
+
+    if (!cart.length) {
+      list.innerHTML = '<div class="alert alert-info">購物車是空的。</div>';
+      totalEl.textContent = 'NT$ 0';
+      return;
+    }
+
+    list.innerHTML = cart.map(i => `
+      <div class="card mb-2">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">${i.title}</div>
+            <div class="text-muted small">NT$${i.price} × ${i.qty}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" data-del="${i.id}">移除</button>
+        </div>
+      </div>
+    `).join('');
+
+    totalEl.textContent = 'NT$ ' + cartTotal().toLocaleString();
+  }
+
+  list.addEventListener('click', e => {
+    const del = e.target.closest('[data-del]');
+    if (!del) return;
+    removeFromCart(del.dataset.del);
+    render();
+  });
+
+  render();
+</script>
+
+<!-- ✅ PayPal SDK（測試用 Sandbox） -->
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=TWD"></script>
+<script type="module">
+  import { clearCart, cartTotal } from '../js/cart.js';
+
+  paypal.Buttons({
+    createOrder: (data, actions) => {
+      const amount = (cartTotal() || 0).toFixed(2);
+      return actions.order.create({
+        purchase_units: [{ amount: { value: amount } }]
+      });
+    },
+    onApprove: async (data, actions) => {
+      await actions.order.capture();
+      clearCart();
+      alert('付款成功！我們將於 LINE 聯繫您。');
+      location.href = '../index.html';
+    }
+  }).render('#paypal-button-container');
+</script>
+
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 
