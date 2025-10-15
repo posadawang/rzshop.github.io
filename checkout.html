@@ -26,11 +26,12 @@
   </div>
 </nav>
 <script type="module">
-  import { logout } from "./js/firebase.js";
+  import { logout, requireAuth } from "./js/firebase.js";
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', logout);
   }
+  requireAuth();
 </script>
 
 <header class="py-4 bg-dark text-white text-center">

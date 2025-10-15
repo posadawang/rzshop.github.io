@@ -14,12 +14,17 @@
       <input type="email" id="email" placeholder="電子郵件" class="form-control mb-2" />
       <input type="password" id="password" placeholder="密碼（至少 6 碼）" class="form-control mb-3" />
       <button id="loginBtn" class="btn btn-primary w-100">登入</button>
+      <div class="d-grid mt-3">
+        <button id="googleLoginBtn" class="btn btn-outline-danger">
+          <span class="me-2">🔐</span>使用 Google 帳號登入
+        </button>
+      </div>
       <div class="text-center mt-3 small">還沒有帳號？<a href="./register.html">前往註冊</a></div>
       <div id="errorMsg" class="text-danger small mt-2"></div>
     </div>
   </div>
   <script type="module">
-    import { loginUser } from "../js/firebase.js";
+    import { loginUser, loginWithGoogle } from "../js/firebase.js";
     const btn = document.getElementById("loginBtn");
     btn.addEventListener("click", async ()=>{
       const email = document.getElementById("email").value.trim();
@@ -29,6 +34,17 @@
       if(!email.includes("@") || !email.includes(".")){ err.textContent="請輸入有效的電子郵件"; return; }
       if(password.length < 6){ err.textContent="密碼至少需 6 碼"; return; }
       try{ await loginUser(email,password); }catch(e){ err.textContent = e.message; }
+    });
+
+    const googleBtn = document.getElementById("googleLoginBtn");
+    googleBtn.addEventListener("click", async () => {
+      const err = document.getElementById("errorMsg");
+      err.textContent = "";
+      try {
+        await loginWithGoogle();
+      } catch (e) {
+        err.textContent = e.message;
+      }
     });
   </script>
 </body>
