@@ -6,17 +6,49 @@ const CART_KEY = 'rzshop_cart';
 const Cart = {
   get(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e){ return []; } },
   set(c){ localStorage.setItem(CART_KEY, JSON.stringify(c||[])); Cart.updateBadge(); },
-  add(item){ if(!item||!item.id)return; const cart = Cart.get(); const i = cart.findIndex(x=>x.id===item.id); if(i>-1) cart[i].qty+=1; else cart.push({...item, qty:1}); Cart.set(cart); alert(`✅ 已加入購物車：${item.title||item.id}`); },
+  add(item){ const cart = Cart.get(); const i = cart.findIndex(x=>x.id===item.id); if(i>-1) cart[i].qty+=1; else cart.push({...item, qty:1}); Cart.set(cart); alert(`✅ 已加入購物車：${item.title}`); },
   remove(id){ Cart.set(Cart.get().filter(x=>x.id!==id)); Cart.render(); },
   updateQty(id,val){ const c=Cart.get(); const f=c.find(x=>x.id===id); if(f){ f.qty=Math.max(1,Number(val)||1); Cart.set(c); Cart.render(); } },
   total(){ return Cart.get().reduce((s,i)=>s+i.price*i.qty,0); },
-  updateBadge(){ const total=Cart.get().reduce((s,i)=>s+i.qty,0); const b=document.getElementById('cartCount'); if(b) b.textContent=total; document.querySelectorAll('[data-cart-badge]').forEach(el=>{ el.textContent=total; }); },
+  updateBadge(){ const b=document.getElementById('cartCount'); if(b) b.textContent=Cart.get().reduce((s,i)=>s+i.qty,0); },
   render(){ const c=document.getElementById('cartItems'); const t=document.getElementById('cartTotal'); const list=Cart.get(); if(!c)return; if(!list.length){ c.innerHTML='<p class="text-center text-muted py-5">購物車是空的</p>'; if(t)t.textContent='0'; return;} c.innerHTML=list.map(i=>`<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><strong>${i.title}</strong><br>NT$${i.price}</div><div class="d-flex align-items-center gap-2"><input type="number" min="1" value="${i.qty}" class="form-control form-control-sm w-auto" onchange="Cart.updateQty('${i.id}',this.value)"><button class="btn btn-sm btn-outline-danger" onclick="Cart.remove('${i.id}')">刪除</button></div></div>`).join(''); if(t)t.textContent=Cart.total().toLocaleString(); }
 };
 
 async function getItems(){ const r=await fetch(`${DATA_URL}?v=${Date.now()}`); return await r.json(); }
 
-async function renderProducts(id,cat){ const el=document.getElementById(id); if(!el)return; const data=await getItems(); const list=(cat&&cat!=='all')?data.filter(x=>x.category===cat):data; const lookup=new Map(list.map(item=>[String(item.id), item])); el.innerHTML=list.map(p=>`<div class="col-md-4"><div class="card h-100 shadow-sm"><img src="${ROOT}/${p.thumbnail}" class="card-img-top"><div class="card-body"><h5>${p.title}</h5><p class="text-muted small">${p.description||''}</p><div class="d-flex justify-content-between align-items-center"><span class="fw-bold text-primary mb-0">NT$${p.price}</span></div><div class="d-flex gap-2 mt-3"><a href="${ROOT}/product.html?id=${p.id}" class="btn btn-sm btn-outline-dark flex-fill">查看詳情</a><button type="button" class="btn btn-sm btn-primary flex-fill btn-add-cart" data-id="${p.id}">加入購物車</button></div></div></div></div>`).join(''); el.querySelectorAll('.btn-add-cart').forEach(btn=>{ btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-id'); if(!id||!lookup.has(id))return; Cart.add(lookup.get(id)); }); }); }
+async function renderProducts(id,cat){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const data=await getItems();
+  const list=(cat&&cat!=='all')?data.filter(x=>x.category===cat):data;
+  el.innerHTML=list.map(p=>`<div class="col-md-4"><div class="card h-100 shadow-sm"><img src="${ROOT}/${p.thumbnail}" class="card-img-top"><div class="card-body"><h5>${p.title}</h5><p class="text-muted small">${p.description}</p><div class="d-flex justify-content-between"><span class="fw-bold text-primary">NT$${p.price}</span><a href="${ROOT}/product.html?id=${p.id}" class="btn btn-sm btn-outline-dark">查看詳情</a></div></div></div></div>`).join('');
+
+  if(!list.length)return;
+  const itemsById=new Map(list.map(item=>[String(item.id), item]));
+  el.querySelectorAll('.d-flex.justify-content-between').forEach(row=>{
+    if(row.querySelector('.btn-add-cart-inline')) return;
+    row.classList.add('align-items-center','gap-3');
+    const link=row.querySelector('a[href]');
+    if(!link)return;
+    const container=document.createElement('div');
+    container.className='d-flex gap-2';
+    const href=link.getAttribute('href')||'';
+    let productId='';
+    try{ productId=new URL(href, location.origin).searchParams.get('id')||''; }
+    catch(e){ const match=href.match(/id=([^&]+)/); productId=match?match[1]:''; }
+    const addBtn=document.createElement('button');
+    addBtn.type='button';
+    addBtn.className='btn btn-sm btn-primary btn-add-cart-inline';
+    addBtn.textContent='加入購物車';
+    addBtn.addEventListener('click',()=>{
+      const item=itemsById.get(productId);
+      if(item) Cart.add(item);
+    });
+    container.appendChild(link);
+    container.appendChild(addBtn);
+    row.appendChild(container);
+  });
+}
 
 async function renderProduct(id){ const el=document.getElementById(id); if(!el)return; const pid=new URLSearchParams(location.search).get('id'); const data=await getItems(); const p=data.find(x=>x.id===pid); if(!p){el.innerHTML='<p>找不到商品</p>';return;} el.innerHTML=`<div class="row g-4"><div class="col-md-6 text-center"><img src="${ROOT}/${p.thumbnail}" class="img-fluid rounded shadow-sm mb-3"><div>${(p.gallery||[]).map(g=>`<img src="${ROOT}/${g}" class="img-thumbnail m-1" style="width:80px">`).join('')}</div></div><div class="col-md-6"><h3>${p.title}</h3><p>${p.description}</p><p class="h5 text-primary">NT$${p.price}</p><button class="btn btn-success btn-lg" onclick='Cart.add(${JSON.stringify(p)})'>加入購物車</button><a href="${ROOT}/checkout.html" class="btn btn-outline-dark btn-lg ms-2">前往結帳</a></div></div>`; }
 
