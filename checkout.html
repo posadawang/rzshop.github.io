@@ -27,11 +27,24 @@
 </nav>
 <script type="module">
   import { logout, requireAuth } from "./js/firebase.js";
+
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', logout);
   }
-  requireAuth();
+
+  requireAuth()
+    .then(user => {
+      window.rzshopCurrentUser = user;
+      document.dispatchEvent(
+        new CustomEvent('rzshop:user-ready', {
+          detail: { user }
+        })
+      );
+    })
+    .catch(error => {
+      console.error('Failed to resolve authenticated user', error);
+    });
 </script>
 
 <header class="py-4 bg-dark text-white text-center">
@@ -95,36 +108,90 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const payButton = document.getElementById("newebpay-button");
+  if (!payButton) return;
+
+  const defaultLabel = payButton.innerHTML;
+
+  const setLoading = isLoading => {
+    payButton.disabled = isLoading;
+    payButton.dataset.loading = isLoading ? "true" : "false";
+    payButton.innerHTML = isLoading ? "⏳ 付款建立中..." : defaultLabel;
+  };
+
   payButton.addEventListener("click", async () => {
-    const total = Cart.total();
-    if (total <= 0) {
+    if (payButton.dataset.loading === "true") return;
+
+    const total = Math.round(Number(Cart.total()) || 0);
+    if (!total || total <= 0) {
       alert("購物車是空的！");
       return;
     }
 
+    const cartItems = Cart.get();
+    const user = window.rzshopCurrentUser || null;
+    const email = user?.email || user?.providerData?.find(p => p?.email)?.email || "";
+
+    if (!email) {
+      alert("正在取得會員資料，請稍後再試或重新登入。");
+      return;
+    }
+
+    const itemDesc = cartItems
+      .slice(0, 3)
+      .map(item => `${item.title || item.id}x${item.qty}`)
+      .join("、")
+      .slice(0, 50) || "阿智小舖商品";
+
+    const payload = {
+      amount: total,
+      email,
+      itemDesc,
+      items: cartItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        qty: item.qty
+      }))
+    };
+
+    setLoading(true);
+
     try {
-      // 呼叫 Firebase Cloud Function
-      const res = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/createOrder", {
+      const response = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/createOrder", {
         method: "POST",
+        mode: "cors",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: total,
-          email: "user@example.com",
-          itemDesc: "阿智小舖商品"
-        })
+        body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await response.text();
 
-      const html = await res.text();
-      const w = window.open("", "_self");
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
+      if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+        try {
+          const data = JSON.parse(text);
+          detail = data?.detail || data?.error || detail;
+        } catch (parseErr) {
+          if (text) detail = text;
+        }
+        throw new Error(detail);
+      }
 
+      const redirectWindow = window.open("", "_self");
+      if (!redirectWindow) {
+        throw new Error("無法開啟付款頁面，請確認瀏覽器未封鎖視窗。");
+      }
+
+      redirectWindow.document.open();
+      redirectWindow.document.write(text);
+      redirectWindow.document.close();
     } catch (err) {
       console.error("付款建立失敗：", err);
-      alert("付款建立失敗，請稍後再試！");
+      const message = err instanceof Error ? err.message : "付款建立失敗，請稍後再試！";
+      alert(`付款建立失敗：${message}`);
+    } finally {
+      setLoading(false);
     }
   });
 });
