@@ -1,6 +1,14 @@
 // js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBv5PzqosNfgYXZSUzr2H04h4thsrbyGUg",
@@ -16,6 +24,10 @@ const ROOT = window.location.pathname.startsWith('/rzshop.github.io') ? '/rzshop
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
+const ROOT_LOGIN = ROOT ? `${ROOT}/auth/login.html` : "/auth/login.html";
 
 function goHome() {
   window.location.href = ROOT ? `${ROOT}/` : '/';
@@ -29,6 +41,12 @@ export async function registerUser(email, password) {
 
 export async function loginUser(email, password) {
   await signInWithEmailAndPassword(auth, email, password);
+  alert("登入成功！");
+  goHome();
+}
+
+export async function loginWithGoogle() {
+  await signInWithPopup(auth, googleProvider);
   alert("登入成功！");
   goHome();
 }
@@ -50,14 +68,30 @@ onAuthStateChanged(auth, user => {
   const status = document.getElementById("userStatus");
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
-  if (!status || !loginBtn || !logoutBtn) return;
-  if (user) {
-    status.textContent = `👤 ${user.email}`;
-    loginBtn.classList.add('d-none');
-    logoutBtn.classList.remove('d-none');
-  } else {
-    status.textContent = "未登入";
-    loginBtn.classList.remove('d-none');
-    logoutBtn.classList.add('d-none');
+  if (status && loginBtn && logoutBtn) {
+    if (user) {
+      const displayName = user.displayName || user.email;
+      status.textContent = `👤 ${displayName}`;
+      loginBtn.classList.add('d-none');
+      logoutBtn.classList.remove('d-none');
+    } else {
+      status.textContent = "未登入";
+      loginBtn.classList.remove('d-none');
+      logoutBtn.classList.add('d-none');
+    }
   }
 });
+
+export function requireAuth() {
+  return new Promise(resolve => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      unsubscribe();
+      if (user) {
+        resolve(user);
+      } else {
+        alert("請先登入會員");
+        window.location.href = ROOT_LOGIN;
+      }
+    });
+  });
+}
