@@ -8,9 +8,21 @@ const querystring = require('querystring');
 admin.initializeApp();
 
 const defaultConfig = {
-  merchantId: functions.config().newebpay?.merchant_id || process.env.NEWEBPAY_MERCHANT_ID || 'MS1624139607',
-  hashKey: functions.config().newebpay?.hash_key || process.env.NEWEBPAY_HASH_KEY || 'b6LpV3yq5SZFi2QAqpJAvFiB729kIKf6',
-  hashIV: functions.config().newebpay?.hash_iv || process.env.NEWEBPAY_HASH_IV || 'PONyLln8z3fr2CkC',
+  merchantId:
+    functions.config().newebpay?.merchant_id ||
+    process.env.NEWEBPAY_MERCHANT_ID ||
+    process.env.MERCHANT_ID ||
+    'MS1624139607',
+  hashKey:
+    functions.config().newebpay?.hash_key ||
+    process.env.NEWEBPAY_HASH_KEY ||
+    process.env.HASH_KEY ||
+    'b6LpV3yq5SZFi2QAqpJAvFiB729kIKf6',
+  hashIV:
+    functions.config().newebpay?.hash_iv ||
+    process.env.NEWEBPAY_HASH_IV ||
+    process.env.HASH_IV ||
+    'PONyLln8z3fr2CkC',
   returnURL:
     functions.config().newebpay?.return_url ||
     process.env.NEWEBPAY_RETURN_URL ||
