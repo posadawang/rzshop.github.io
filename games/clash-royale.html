@@ -18,6 +18,18 @@
 
     </a>
   </div>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <span id="userStatus" class="small text-muted">未登入</span>
+      <a id="loginBtn" class="btn btn-outline-primary btn-sm" href="/rzshop.github.io/auth/login.html">登入</a>
+      <button id="logoutBtn" class="btn btn-outline-danger btn-sm" style="display:none;">登出</button>
+    </div>
+    <script type="module">
+      import { logoutUser } from "/rzshop.github.io/js/firebase.js";
+      const lb = document.getElementById('logoutBtn');
+      if(lb){ lb.addEventListener('click', ()=>logoutUser()); }
+    </script>
+
 </nav>
 
 <header class="py-5 bg-dark text-center text-white">

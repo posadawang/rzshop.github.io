@@ -1,5 +1,5 @@
 const ROOT = location.pathname.startsWith('/rzshop.github.io') ? '/rzshop.github.io' : '';
-const DATA_URL = `${ROOT}/data/items.json`;
+const DATA_URL = `${ROOT}//rzshop.github.io/data/items.json`;
 const CART_KEY = 'rzshop_cart';
 let itemsCache = null;
 
