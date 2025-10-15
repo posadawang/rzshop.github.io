@@ -82,23 +82,7 @@ const Cart = {
       return;
     }
     mount.innerHTML = list
-      .map(item => `
-        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-          <div>
-            <strong>${item.title || item.id}</strong><br>
-            <small class="text-muted">NT$${formatCurrency(item.price)}</small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <input type="number" min="1" value="${item.qty}" class="form-control form-control-sm w-auto"
-              onchange="Cart.updateQty('${item.id}', this.value)">
-            <div class="text-end">
-              <div class="small text-muted">小計</div>
-              <div class="fw-semibold">NT$${formatCurrency(item.price * item.qty)}</div>
-            </div>
-            <button class="btn btn-sm btn-outline-danger" onclick="Cart.remove('${item.id}')">刪除</button>
-          </div>
-        </div>
-      `)
+
       .join('');
     if (totalEl) totalEl.textContent = formatCurrency(Cart.total());
   }
@@ -134,7 +118,7 @@ function buildCard(item) {
           <h5 class="card-title mb-1">${item.id}｜${item.title}</h5>
           <div class="text-primary fw-bold mb-2">NT$ ${price}</div>
           <p class="card-text small text-muted mb-3">${item.description ?? ''}</p>
-          <a href="${link}" class="btn btn-outline-primary w-100">查看詳情</a>
+
         </div>
       </div>
     </div>
@@ -148,6 +132,7 @@ function renderList(mount, list) {
     return;
   }
   mount.innerHTML = list.map(buildCard).join('');
+ main
 }
 
 function filterByCategory(items, category) {
@@ -237,83 +222,11 @@ async function bindSearch(category = 'all', mountId = 'cards', inputId = 'search
   };
 
   await loadCategory(category);
-
-  return {
-    async setCategory(cat = 'all') {
-      await loadCategory(cat);
-    }
-  };
-}
-
-async function renderProduct(mountId) {
-  const mount = document.getElementById(mountId);
-  if (!mount) return;
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  if (!id) {
-    mount.innerHTML = '<div class="alert alert-warning">❌ 找不到商品代號。</div>';
-    return;
-  }
-  try {
-    const items = await getItems();
-    const product = items.find(item => String(item.id) === String(id));
-    if (!product) {
-      mount.innerHTML = '<div class="alert alert-danger">找不到此商品。</div>';
-      return;
-    }
-    const gallery = Array.isArray(product.gallery) ? product.gallery : [];
-    const galleryHtml = gallery
-      .map(src => `<img src="${ROOT}/${src}" class="img-thumbnail m-1 thumb" alt="${product.title}">`)
-      .join('');
-    mount.innerHTML = `
-      <div class="row g-4">
-        <div class="col-md-6 text-center">
-          <img src="${ROOT}/${product.thumbnail}" class="img-fluid rounded shadow-sm mb-3" alt="${product.title}">
-          <div>${galleryHtml}</div>
-        </div>
-        <div class="col-md-6">
-          <h3>${product.title}</h3>
-          <p class="text-muted">${product.category}</p>
-          <p>${product.description || '無詳細介紹'}</p>
-          <p class="h5 text-primary">NT$${formatCurrency(product.price)}</p>
-          <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-success btn-lg" data-action="add-to-cart">加入購物車</button>
-            <a href="${ROOT}/checkout.html" class="btn btn-outline-dark btn-lg">前往結帳</a>
-          </div>
-        </div>
-      </div>
-    `;
-    const addButton = mount.querySelector('[data-action="add-to-cart"]');
-    addButton?.addEventListener('click', () => Cart.add(product));
-  } catch (err) {
-    mount.innerHTML = '<div class="alert alert-danger">商品資料載入失敗，請稍後再試。</div>';
-  }
-}
-
-function renderCheckout() {
-  Cart.render();
-  if (typeof paypal !== 'undefined') {
-    paypal
-      .Buttons({
-        createOrder: (data, actions) =>
-          actions.order.create({
-            purchase_units: [
-              {
-                amount: { value: Cart.total().toFixed(2) }
-              }
-            ]
-          }),
-        onApprove: (data, actions) =>
-          actions.order.capture().then(() => {
-            alert('✅ 付款成功');
-            Cart.clear();
-            location.href = `${ROOT}/thankyou.html`;
-          })
-      })
-      .render('#paypal-button-container');
+ main
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   Cart.updateBadge();
+ main
 });
