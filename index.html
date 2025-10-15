@@ -10,15 +10,16 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container">
+  <div class="container d-flex align-items-center gap-3">
     <a class="navbar-brand fw-bold" href="/rzshop.github.io/">
-      <img src="assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
-      <a href="products/checkout.html" class="btn btn-outline-primary position-relative ms-auto">
-  購物車
-  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
-</a>
-
+      <img src="assets/images/rzshopp.jpg" alt="阿智小舖標誌" width="28" height="28" class="me-2">阿智小舖
     </a>
+    <div class="ms-auto">
+      <a href="/rzshop.github.io/checkout.html" class="btn btn-outline-primary position-relative">
+        購物車
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
+      </a>
+    </div>
   </div>
 </nav>
 
@@ -63,7 +64,7 @@
 </main>
 
 <footer class="py-4 border-top text-center small">
-  <div class="container">© <span id="year"></span> 阿智小舖 • 僅供展示用途</div>
+  <div class="container">© <span data-year></span> 阿智小舖 • 僅供展示用途</div>
 </footer>
 
 <!-- ✅ LINE 浮動客服按鈕 -->
@@ -96,43 +97,42 @@
 </style>
 
 <script>
-  // 年份
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // 首頁載入：顯示全部並綁搜尋（依你現有的 js/app.js 介面）
   document.addEventListener('DOMContentLoaded', () => {
-    if (typeof renderAll === 'function') {
-      renderAll();
-    } else if (typeof renderCategory === 'function') {
-      renderCategory('all', 'cards');
-    }
+    const buttons = document.querySelectorAll('.cat-btn');
+    const controller = typeof bindSearch === 'function'
+      ? bindSearch('all', 'cards', 'searchInput', 'resultMeta')
+      : null;
 
-    const btns = document.querySelectorAll('.cat-btn');
-    btns.forEach(b => b.addEventListener('click', () => {
-      btns.forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      const cat = b.getAttribute('data-cat');
-      if (cat === 'all') {
-        if (typeof renderAll === 'function') renderAll();
-        else if (typeof renderCategory === 'function') renderCategory('all', 'cards');
-      } else {
-        if (typeof renderCategory === 'function') renderCategory(cat, 'cards');
-      }
-      const input = document.getElementById('searchInput');
-      input && input.dispatchEvent(new Event('input'));
-    }));
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.getAttribute('data-cat') || 'all';
+        if (controller && typeof controller.updateCategory === 'function') {
+          controller.updateCategory(cat);
+        } else if (typeof renderCategory === 'function') {
+          renderCategory(cat, 'cards', 'resultMeta');
+        }
+        const input = document.getElementById('searchInput');
+        if (input) {
+          input.value = '';
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+    });
 
     document.getElementById('clearBtn')?.addEventListener('click', () => {
-      const i = document.getElementById('searchInput');
-      i.value = '';
-      i.dispatchEvent(new Event('input'));
-      i.focus();
+      const input = document.getElementById('searchInput');
+      if (!input) return;
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      input.focus();
     });
   });
 </script>
 
 <!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js?v=7" defer></script>
+<script src="js/app.js?v=11" defer></script>
 </body>
 </html>
