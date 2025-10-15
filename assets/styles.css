@@ -27,3 +27,29 @@ body { font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Roboto
   border-color: #0d6efd !important;
   box-shadow: 0 0.5rem 1rem rgba(13,110,253,.15);
 }
+
+/* 購物車行動版排版 */
+.cart-item-actions {
+  min-width: 0;
+}
+
+.cart-item-actions .cart-qty-input {
+  width: 88px;
+}
+
+@media (max-width: 576px) {
+  .cart-item-actions {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .cart-item-actions .cart-qty-input {
+    width: 100%;
+  }
+  .cart-item-actions .btn {
+    width: 100%;
+  }
+  .cart-item-actions .fw-semibold {
+    width: 100%;
+    text-align: right;
+  }
+}

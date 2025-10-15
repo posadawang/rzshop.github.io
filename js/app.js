@@ -6,7 +6,7 @@ let itemsCache = null;
 
 function loadItems() {
   if (!itemsCache) {
-    itemsCache = fetch(`${DATA_URL}?v=20240529`)
+    itemsCache = fetch(`${DATA_URL}?v=20240530`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`items.json 載入失敗 (${res.status})`);
@@ -57,8 +57,7 @@ const Cart = {
     Cart.render();
   },
   remove(id) {
-    const list = Cart.get().filter((item) => item.id !== id);
-    Cart.set(list);
+    Cart.set(Cart.get().filter((item) => item.id !== id));
     Cart.render();
   },
   updateQty(id, value) {
@@ -76,7 +75,7 @@ const Cart = {
     Cart.render();
   },
   total() {
-    return Cart.get().reduce((sum, item) => sum + item.price * item.qty, 0);
+    return Cart.get().reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
   },
   updateBadge() {
     const totalQty = Cart.get().reduce((sum, item) => sum + (item.qty || 0), 0);
@@ -139,34 +138,23 @@ function createCardHtml(item) {
   const thumb = `${ROOT}/${item.thumbnail}`;
   const description = item.description ? item.description : '';
   return `
-    <div class="col-12 col-sm-6 col-lg-4">
+    <div class="col-12 col-md-6 col-lg-4">
       <div class="card h-100 shadow-sm">
         <img src="${thumb}" class="card-img-top" alt="${item.title}" onerror="this.src='${ROOT}/assets/images/logo.svg'">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title mb-1">${item.id}｜${item.title}</h5>
-          <div class="text-primary fw-bold mb-2">NT$ ${formatCurrency(item.price)}</div>
-          <p class="card-text small text-muted flex-grow-1">${description}</p>
-          <div class="d-flex justify-content-between align-items-center gap-2">
-            <a href="${detailHref}" class="btn btn-outline-dark btn-sm btn-detail" data-product-id="${item.id}">查看詳情</a>
-            <button type="button" class="btn btn-primary btn-sm btn-add-cart" data-product-id="${item.id}">加入購物車</button>
+          <h5 class="card-title mb-1">${item.title}</h5>
+          <p class="text-muted small flex-grow-1">${description}</p>
+          <div class="mt-3 d-flex flex-column gap-2">
+            <div class="fw-bold text-primary">NT$ ${formatCurrency(item.price)}</div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="${detailHref}" class="btn btn-outline-dark btn-sm">查看詳情</a>
+              <button type="button" class="btn btn-primary btn-sm btn-add-cart" data-product-id="${item.id}">加入購物車</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   `;
-}
-
-function mountCards(list, mount, meta) {
-  if (!mount) return;
-  if (!Array.isArray(list) || !list.length) {
-    mount.innerHTML = '<div class="col-12"><div class="alert alert-warning">目前沒有符合條件的商品。</div></div>';
-  } else {
-    mount.innerHTML = list.map(createCardHtml).join('');
-  }
-  if (meta) {
-    meta.textContent = `共 ${list.length} 筆結果`;
-  }
-  wireInlineButtons(mount, list);
 }
 
 function wireInlineButtons(mount, list) {
@@ -185,20 +173,20 @@ function wireInlineButtons(mount, list) {
   });
 }
 
-function renderAll(mountId = 'cards', metaId = 'resultMeta') {
-  const mount = document.getElementById(mountId);
-  const meta = metaId ? document.getElementById(metaId) : null;
-  loadItems()
-    .then((items) => mountCards(items, mount, meta))
-    .catch((err) => {
-      console.error(err);
-      if (mount) {
-        mount.innerHTML = '<div class="col-12"><div class="alert alert-danger">商品資料載入失敗，請稍後再試。</div></div>';
-      }
-    });
+function mountCards(list, mount, meta) {
+  if (!mount) return;
+  if (!Array.isArray(list) || !list.length) {
+    mount.innerHTML = '<div class="col-12"><div class="alert alert-warning">目前沒有符合條件的商品。</div></div>';
+  } else {
+    mount.innerHTML = list.map(createCardHtml).join('');
+  }
+  if (meta) {
+    meta.textContent = `共 ${list.length} 筆結果`;
+  }
+  wireInlineButtons(mount, list);
 }
 
-function renderCategory(category, mountId = 'cards', metaId = 'resultMeta') {
+function renderCategory(category = 'all', mountId = 'cards', metaId = 'resultMeta') {
   const mount = document.getElementById(mountId);
   const meta = metaId ? document.getElementById(metaId) : null;
   loadItems()
@@ -270,6 +258,10 @@ function bindSearch(category = 'all', mountId = 'cards', inputId = 'searchInput'
       applyFilters();
     },
   };
+}
+
+function renderAll(mountId = 'cards', metaId = 'resultMeta') {
+  renderCategory('all', mountId, metaId);
 }
 
 async function renderProduct(containerId = 'productContainer') {
