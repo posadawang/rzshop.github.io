@@ -82,29 +82,7 @@ const Cart = {
       return;
     }
     mount.innerHTML = list
-      .map((item, index) => {
-        const qtyId = `cart-qty-${index}`;
-        return `
-          <div class="cart-item border-bottom py-3">
-            <div class="cart-item-info text-break">
-              <strong>${item.title || item.id}</strong>
-              <div class="small text-muted">NT$${formatCurrency(item.price)}</div>
-            </div>
-            <div class="cart-item-actions">
-              <div class="cart-item-qty-group">
-                <label for="${qtyId}" class="small text-muted">數量</label>
-                <input type="number" id="${qtyId}" min="1" value="${item.qty}" class="form-control form-control-sm text-center cart-item-qty"
-                  onchange="Cart.updateQty('${item.id}', this.value)">
-              </div>
-              <div class="cart-item-subtotal">
-                <span class="small text-muted">小計</span>
-                <span class="fw-semibold">NT$${formatCurrency(item.price * item.qty)}</span>
-              </div>
-              <button class="btn btn-outline-danger btn-sm cart-item-remove" onclick="Cart.remove('${item.id}')">刪除</button>
-            </div>
-          </div>
-        `;
-      })
+
       .join('');
     if (totalEl) totalEl.textContent = formatCurrency(Cart.total());
   }
@@ -140,10 +118,7 @@ function buildCard(item) {
           <h5 class="card-title mb-1">${item.id}｜${item.title}</h5>
           <div class="text-primary fw-bold mb-2">NT$ ${price}</div>
           <p class="card-text small text-muted mb-3">${item.description ?? ''}</p>
-          <div class="d-flex gap-2">
-            <a href="${link}" class="btn btn-outline-primary flex-fill">查看詳情</a>
-            <button type="button" class="btn btn-primary flex-fill btn-add-cart" data-item-id="${item.id}">加入購物車</button>
-          </div>
+
         </div>
       </div>
     </div>
@@ -157,15 +132,7 @@ function renderList(mount, list) {
     return;
   }
   mount.innerHTML = list.map(buildCard).join('');
-  const lookup = new Map(list.map(item => [String(item.id), item]));
-  mount.querySelectorAll('.btn-add-cart').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-item-id');
-      if (!id || !lookup.has(id)) return;
-      const item = lookup.get(id);
-      Cart.add(item);
-    });
-  });
+ main
 }
 
 function filterByCategory(items, category) {
@@ -255,137 +222,11 @@ async function bindSearch(category = 'all', mountId = 'cards', inputId = 'search
   };
 
   await loadCategory(category);
-
-  return {
-    async setCategory(cat = 'all') {
-      await loadCategory(cat);
-    }
-  };
-}
-
-async function renderProduct(mountId) {
-  const mount = document.getElementById(mountId);
-  if (!mount) return;
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  if (!id) {
-    mount.innerHTML = '<div class="alert alert-warning">❌ 找不到商品代號。</div>';
-    return;
-  }
-  try {
-    const items = await getItems();
-    const product = items.find(item => String(item.id) === String(id));
-    if (!product) {
-      mount.innerHTML = '<div class="alert alert-danger">找不到此商品。</div>';
-      return;
-    }
-    const gallery = Array.isArray(product.gallery) ? product.gallery : [];
-    const galleryHtml = gallery
-      .map(src => `<img src="${ROOT}/${src}" class="img-thumbnail m-1 thumb" alt="${product.title}">`)
-      .join('');
-    mount.innerHTML = `
-      <div class="row g-4">
-        <div class="col-md-6 text-center">
-          <img src="${ROOT}/${product.thumbnail}" class="img-fluid rounded shadow-sm mb-3" alt="${product.title}">
-          <div>${galleryHtml}</div>
-        </div>
-        <div class="col-md-6">
-          <h3>${product.title}</h3>
-          <p class="text-muted">${product.category}</p>
-          <p>${product.description || '無詳細介紹'}</p>
-          <p class="h5 text-primary">NT$${formatCurrency(product.price)}</p>
-          <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-success btn-lg" data-action="add-to-cart">加入購物車</button>
-            <a href="${ROOT}/checkout.html" class="btn btn-outline-dark btn-lg">前往結帳</a>
-          </div>
-        </div>
-      </div>
-    `;
-    const addButton = mount.querySelector('[data-action="add-to-cart"]');
-    addButton?.addEventListener('click', () => Cart.add(product));
-  } catch (err) {
-    mount.innerHTML = '<div class="alert alert-danger">商品資料載入失敗，請稍後再試。</div>';
-  }
-}
-
-function renderCheckout() {
-  Cart.render();
-  if (typeof paypal !== 'undefined') {
-    paypal
-      .Buttons({
-        createOrder: (data, actions) =>
-          actions.order.create({
-            purchase_units: [
-              {
-                amount: { value: Cart.total().toFixed(2) }
-              }
-            ]
-          }),
-        onApprove: (data, actions) =>
-          actions.order.capture().then(() => {
-            alert('✅ 付款成功');
-            Cart.clear();
-            location.href = `${ROOT}/thankyou.html`;
-          })
-      })
-      .render('#paypal-button-container');
-  }
-}
-
-function updateCurrentYear() {
-  const year = new Date().getFullYear();
-  document.querySelectorAll('#year').forEach(node => {
-    node.textContent = year;
-  });
-}
-
-async function initCatalogPage() {
-  const cards = document.getElementById('cards');
-  if (!cards) return;
-
-  const defaultCategory = cards.dataset.category || 'all';
-  const metaEl = document.getElementById('resultMeta');
-  const metaId = metaEl ? 'resultMeta' : undefined;
-  const controller = await bindSearch(defaultCategory, 'cards', 'searchInput', metaId);
-
-  const searchInput = document.getElementById('searchInput');
-  document.getElementById('clearBtn')?.addEventListener('click', () => {
-    if (!searchInput) return;
-    searchInput.value = '';
-    searchInput.dispatchEvent(new Event('input'));
-    searchInput.focus();
-  });
-
-  const buttons = document.querySelectorAll('.cat-btn[data-cat]');
-  buttons.forEach(btn => {
-    btn.addEventListener('click', async () => {
-      buttons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (searchInput) {
-        searchInput.value = '';
-        searchInput.dispatchEvent(new Event('input'));
-      }
-      await controller.setCategory(btn.getAttribute('data-cat') || 'all');
-    });
-  });
-}
-
-function initProductPage() {
-  if (document.getElementById('productContainer')) {
-    renderProduct('productContainer');
-  }
-}
-
-function initCheckoutPage() {
-  if (document.getElementById('cartItems')) {
-    renderCheckout();
+ main
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   Cart.updateBadge();
-  updateCurrentYear();
-  initCatalogPage().catch(err => console.error('Failed to init catalog page', err));
-  initProductPage();
-  initCheckoutPage();
+ main
 });
