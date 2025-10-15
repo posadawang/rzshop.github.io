@@ -103,11 +103,10 @@
 
 <!-- 🧠 自動帶入金額與 email -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const total = localStorage.getItem("cartTotal") || 100;
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  document.getElementById("payAmount").value = total;
-  document.getElementById("payEmail").value = user.email || "test@gmail.com";
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof updateNewebpayFormFields === 'function') {
+    updateNewebpayFormFields({ items: Cart.get(), total: Cart.total() });
+  }
 });
 </script>
 </body>
