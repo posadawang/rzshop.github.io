@@ -551,3 +551,43 @@ document.addEventListener('DOMContentLoaded', () => {
   initProductPage();
   initCheckoutPage();
 });
+
+// === 🧾 藍新金流付款整合區 ===
+async function payWithNewebPay() {
+  const total = Cart.total();
+  if (total <= 0) {
+    alert("購物車是空的，請先選購商品！");
+    return;
+  }
+
+  const userEmail = JSON.parse(localStorage.getItem("user") || "{}").email || "test@example.com";
+
+  try {
+    // 呼叫 Firebase Function 建立訂單
+    const response = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/api/createOrder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: total,
+        email: userEmail,
+        itemDesc: "阿智小舖商品"
+      })
+    });
+
+    const html = await response.text();
+    document.open();
+    document.write(html);
+    document.close();
+  } catch (error) {
+    console.error("NewebPay 錯誤：", error);
+    alert("付款建立失敗，請稍後再試！");
+  }
+}
+
+// 綁定付款按鈕
+document.addEventListener("DOMContentLoaded", () => {
+  const payButton = document.getElementById("newebpay-button");
+  if (payButton) {
+    payButton.addEventListener("click", payWithNewebPay);
+  }
+});
