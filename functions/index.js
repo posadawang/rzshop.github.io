@@ -3,51 +3,88 @@ require('dotenv').config();
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const express = require('express');
 const querystring = require('querystring');
 
 admin.initializeApp();
 
 const { logger } = functions;
 
+function resolveConfigValue(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    const trimmed = String(value).trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return '';
+}
+
 const defaultConfig = {
-  merchantId:
-    functions.config().newebpay?.merchant_id ||
-    process.env.NEWEBPAY_MERCHANT_ID ||
-    process.env.MERCHANT_ID ||
-    'MS1624139607',
-  hashKey:
-    functions.config().newebpay?.hash_key ||
-    process.env.NEWEBPAY_HASH_KEY ||
-    process.env.HASH_KEY ||
-    'b6LpV3yq5SZFi2QAqpJAvFiB729kIKf6',
-  hashIV:
-    functions.config().newebpay?.hash_iv ||
-    process.env.NEWEBPAY_HASH_IV ||
-    process.env.HASH_IV ||
-    'PONyLln8z3fr2CkC',
-  returnURL:
-    functions.config().newebpay?.return_url ||
-    process.env.NEWEBPAY_RETURN_URL ||
-    'https://posadawang.github.io/rzshop.github.io/thankyou.html',
-  notifyURL:
-    functions.config().newebpay?.notify_url ||
-    process.env.NEWEBPAY_NOTIFY_URL ||
-    'https://us-central1-rzshop-auth.cloudfunctions.net/paymentNotify',
-  clientBackURL:
-    functions.config().newebpay?.client_back_url ||
-    process.env.NEWEBPAY_CLIENT_BACK_URL ||
-    'https://posadawang.github.io/rzshop.github.io/thankyou.html',
-  environment: functions.config().newebpay?.environment || process.env.NEWEBPAY_ENVIRONMENT || 'sandbox',
-  allowOrigin:
-    functions.config().newebpay?.allow_origin ||
-    process.env.NEWEBPAY_ALLOW_ORIGIN ||
+  merchantId: resolveConfigValue(
+    functions.config().newebpay?.merchant_id,
+    process.env.NEWEBPAY_MERCHANT_ID,
+    process.env.MERCHANT_ID,
+    'MS1624139607'
+  ),
+  hashKey: resolveConfigValue(
+    functions.config().newebpay?.hash_key,
+    process.env.NEWEBPAY_HASH_KEY,
+    process.env.HASH_KEY,
+    'b6LpV3yq5SZFi2QAqpJAvFiB729kIKf6'
+  ),
+  hashIV: resolveConfigValue(
+    functions.config().newebpay?.hash_iv,
+    process.env.NEWEBPAY_HASH_IV,
+    process.env.HASH_IV,
+    'PONyLln8z3fr2CkC'
+  ),
+  returnURL: resolveConfigValue(
+    functions.config().newebpay?.return_url,
+    process.env.NEWEBPAY_RETURN_URL,
+    'https://posadawang.github.io/rzshop.github.io/thankyou.html'
+  ),
+  notifyURL: resolveConfigValue(
+    functions.config().newebpay?.notify_url,
+    process.env.NEWEBPAY_NOTIFY_URL,
+    'https://us-central1-rzshop-auth.cloudfunctions.net/paymentNotify'
+  ),
+  clientBackURL: resolveConfigValue(
+    functions.config().newebpay?.client_back_url,
+    process.env.NEWEBPAY_CLIENT_BACK_URL,
+    'https://posadawang.github.io/rzshop.github.io/thankyou.html'
+  ),
+  environment: resolveConfigValue(
+    functions.config().newebpay?.environment,
+    process.env.NEWEBPAY_ENVIRONMENT,
+    'sandbox'
+  ),
+  allowOrigin: resolveConfigValue(
+    functions.config().newebpay?.allow_origin,
+    process.env.NEWEBPAY_ALLOW_ORIGIN,
     'https://posadawang.github.io,http://localhost:5000,http://127.0.0.1:5000'
+  )
 };
 
 const API_URL =
   defaultConfig.environment === 'production'
     ? 'https://core.newebpay.com/MPG/mpg_gateway'
     : 'https://ccore.newebpay.com/MPG/mpg_gateway';
+
+const requiredEnvVars = [
+  'NEWEBPAY_MERCHANT_ID',
+  'NEWEBPAY_HASH_KEY',
+  'NEWEBPAY_HASH_IV',
+  'NEWEBPAY_RETURN_URL',
+  'NEWEBPAY_NOTIFY_URL'
+];
+
+requiredEnvVars.forEach(name => {
+  if (!process.env[name]) {
+    console.warn(`[NewebPay] Environment variable ${name} is not set.`);
+  }
+});
 
 function maskSecret(value = '', visible = 4) {
   if (!value) return '';
@@ -57,8 +94,10 @@ function maskSecret(value = '', visible = 4) {
 }
 
 function getCryptoBuffers() {
-  const keyBuffer = Buffer.from(defaultConfig.hashKey || '', 'utf8');
-  const ivBuffer = Buffer.from(defaultConfig.hashIV || '', 'utf8');
+  const hashKey = (defaultConfig.hashKey || '').trim();
+  const hashIV = (defaultConfig.hashIV || '').trim();
+  const keyBuffer = Buffer.from(hashKey, 'utf8');
+  const ivBuffer = Buffer.from(hashIV, 'utf8');
 
   if (keyBuffer.length !== 32) {
     throw new Error(`Invalid NEWEBPAY_HASH_KEY length: expected 32 bytes, received ${keyBuffer.length}`);
@@ -210,47 +249,107 @@ function setCorsHeaders(req, res) {
   res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 }
 
-exports.createOrder = functions.https.onRequest(async (req, res) => {
-  setCorsHeaders(req, res);
+const app = express();
 
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  setCorsHeaders(req, res);
   if (req.method === 'OPTIONS') {
     res.status(204).send('');
     return;
   }
+  next();
+});
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
+function resolveRequestBody(req) {
+  if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+    return req.body;
   }
+  return parseBody(req);
+}
 
+function normalizeItems(items = []) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map(item => {
+      if (!item || typeof item !== 'object') return null;
+      const price = Number(item.price);
+      const qty = Math.floor(Number(item.qty));
+      return {
+        id: item.id ?? '',
+        title: item.title ?? '',
+        price: Number.isFinite(price) && price >= 0 ? price : 0,
+        qty: Number.isFinite(qty) && qty > 0 ? qty : 1
+      };
+    })
+    .filter(Boolean);
+}
+
+async function handleCreateOrder(req, res) {
   try {
-    const body = parseBody(req);
-    const amount = Number(body.amount || body.Amt || 0);
+    const rawBody = resolveRequestBody(req) || {};
+    const body = typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {};
+
+    logger.info('📦 req.body', { body });
+    console.log('📦 req.body:', body);
+
+    const missingFields = [];
+    if (body.amount === undefined || body.amount === null || body.amount === '') {
+      missingFields.push('amount');
+    }
+    if (!body.email) {
+      missingFields.push('email');
+    }
+    if (!body.itemDesc && !body.item) {
+      missingFields.push('itemDesc');
+    }
+
+    if (missingFields.length) {
+      res.status(400).json({ error: 'Missing fields', missing: missingFields, body });
+      return;
+    }
+
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      res.status(400).json({
+        error: 'Invalid amount',
+        detail: 'Amount must be greater than zero.',
+        body
+      });
+      return;
+    }
+
     const email = String(body.email || '').trim();
-    const item = String(body.item || body.itemDesc || '阿智小舖商品').trim();
-    const items = Array.isArray(body.items) ? body.items : [];
+    if (!email) {
+      res.status(400).json({
+        error: 'Email is required',
+        detail: '請提供有效的電子信箱以建立訂單。',
+        body
+      });
+      return;
+    }
+
+    const itemDesc = String(body.itemDesc || body.item || '阿智小舖商品').trim() || '阿智小舖商品';
+    const normalizedItems = normalizeItems(body.items);
+    const normalizedAmount = Math.round(amount);
 
     logger.info('createOrder request received', {
       origin: req.get('origin') || null,
       referer: req.get('referer') || null,
-      amount,
+      amount: normalizedAmount,
       email,
-      item,
-      itemCount: items.length
+      itemDesc,
+      itemCount: normalizedItems.length
     });
 
-    if (!amount || amount <= 0) {
-      res.status(400).json({ error: 'Invalid amount', detail: 'Amount must be greater than zero.' });
-      return;
-    }
-
-    if (!email) {
-      res.status(400).json({ error: 'Email is required', detail: '請提供有效的電子信箱以建立訂單。' });
-      return;
-    }
-
     const orderId = `RZ${Date.now()}`;
-    await createOrderRecord(orderId, { amount, email, item, items });
+    await createOrderRecord(orderId, {
+      amount: normalizedAmount,
+      email,
+      item: itemDesc,
+      items: normalizedItems
+    });
 
     const timestamp = Math.floor(Date.now() / 1000);
     const tradeInfoData = {
@@ -260,8 +359,8 @@ exports.createOrder = functions.https.onRequest(async (req, res) => {
       Version: '2.0',
       LangType: 'zh-tw',
       MerchantOrderNo: orderId,
-      Amt: Math.round(amount),
-      ItemDesc: item,
+      Amt: normalizedAmount,
+      ItemDesc: itemDesc,
       Email: email,
       ReturnURL: defaultConfig.returnURL,
       NotifyURL: defaultConfig.notifyURL,
@@ -283,26 +382,27 @@ exports.createOrder = functions.https.onRequest(async (req, res) => {
       tradeSha
     });
 
-    const html = `<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8">
-  <title>Redirecting...</title>
-</head>
-<body>
-  <form id="newebpay" method="post" action="${API_URL}">
-    <input type="hidden" name="MerchantID" value="${defaultConfig.merchantId}" />
-    <input type="hidden" name="TradeInfo" value="${tradeInfo}" />
-    <input type="hidden" name="TradeSha" value="${tradeSha}" />
-    <input type="hidden" name="Version" value="2.0" />
-    <noscript>
-      <p>請點擊下方按鈕前往付款</p>
-      <button type="submit">前往藍新金流付款</button>
-    </noscript>
-  </form>
-  <script>document.getElementById('newebpay').submit();</script>
-</body>
-</html>`;
+    const html =
+      '<!doctype html>' +
+      '<html lang="zh-Hant">' +
+      '<head>' +
+      '  <meta charset="utf-8">' +
+      '  <title>Redirecting...</title>' +
+      '</head>' +
+      '<body>' +
+      `  <form id="newebpay" method="post" action="${API_URL}">` +
+      `    <input type="hidden" name="MerchantID" value="${defaultConfig.merchantId}" />` +
+      `    <input type="hidden" name="TradeInfo" value="${tradeInfo}" />` +
+      `    <input type="hidden" name="TradeSha" value="${tradeSha}" />` +
+      '    <input type="hidden" name="Version" value="2.0" />' +
+      '    <noscript>' +
+      '      <p>請點擊下方按鈕前往付款</p>' +
+      '      <button type="submit">前往藍新金流付款</button>' +
+      '    </noscript>' +
+      '  </form>' +
+      "  <script>document.getElementById('newebpay').submit();</script>" +
+      '</body>' +
+      '</html>';
 
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(html);
@@ -311,6 +411,26 @@ exports.createOrder = functions.https.onRequest(async (req, res) => {
     logger.error('createOrder error', { message, stack: error?.stack || null });
     res.status(500).json({ error: 'Failed to create NewebPay order', detail: message });
   }
+}
+
+app.post('/createOrder', handleCreateOrder);
+
+exports.api = functions.https.onRequest(app);
+
+exports.createOrder = functions.https.onRequest(async (req, res) => {
+  setCorsHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  await handleCreateOrder(req, res);
 });
 
 exports.newebpayReturn = functions.https.onRequest(async (req, res) => {
