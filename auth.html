@@ -20,7 +20,8 @@
   </div>
 
   <script type="module">
-    import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "./js/firebase.js";
+    import { auth } from "./js/firebase.js";
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
