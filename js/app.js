@@ -497,36 +497,44 @@ function renderPayPalButtons(total) {
 }
 
 function updateNewebpayFormFields(detail = {}) {
-  const amountInput = document.getElementById('payAmount');
-  const emailInput = document.getElementById('payEmail');
-  const itemInput = document.getElementById('payItem');
-
+  const newebpayBtn = document.getElementById('newebpayBtn');
+  const hint = document.querySelector('[data-newebpay-hint]');
   const total = detail.total ?? Cart.total();
   const items = detail.items ?? Cart.get();
 
-  if (amountInput) {
-    const amount = Math.max(1, Math.round(Number(total) || 0));
-    amountInput.value = String(amount);
-  }
+  if (!newebpayBtn) return;
 
-  if (itemInput) {
-    const summary = Array.isArray(items)
-      ? items.map(item => `${item.title || item.id}x${item.qty}`).join(', ')
-      : '';
-    itemInput.value = summary || '阿智小舖商品';
-  }
+  const rawTotal = Number(total) || 0;
+  const amount = Math.round(rawTotal);
+  const summary = Array.isArray(items)
+    ? items.map(item => `${item.title || item.id}x${item.qty}`).join(', ')
+    : '';
 
-  if (emailInput) {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      if (user?.email) {
-        emailInput.value = user.email;
-      }
-    } catch (err) {
-      console.warn('Unable to parse user info from storage', err);
+  let email = 'test@gmail.com';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user?.email) {
+      email = user.email;
     }
-    if (!emailInput.value) {
-      emailInput.value = 'test@gmail.com';
+  } catch (err) {
+    console.warn('Unable to parse user info from storage', err);
+  }
+
+  if (amount > 0) {
+    newebpayBtn.disabled = false;
+    newebpayBtn.dataset.amount = String(Math.max(1, amount));
+    newebpayBtn.dataset.item = summary || '阿智小舖商品';
+    newebpayBtn.dataset.email = email;
+    if (hint) {
+      hint.textContent = '點擊按鈕即可前往藍新金流完成付款。';
+    }
+  } else {
+    newebpayBtn.disabled = true;
+    delete newebpayBtn.dataset.amount;
+    delete newebpayBtn.dataset.item;
+    delete newebpayBtn.dataset.email;
+    if (hint) {
+      hint.textContent = '購物車目前沒有可結帳的商品。';
     }
   }
 }
