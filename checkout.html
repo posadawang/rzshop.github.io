@@ -6,7 +6,7 @@
   <title>結帳｜阿智小舖</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link href="assets/styles.css?v=3" rel="stylesheet">
+  <link href="assets/styles.css?v=6" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
@@ -25,12 +25,11 @@
     </a>
   </div>
 </nav>
+
 <script type="module">
   import { logout, requireAuth } from "./js/firebase.js";
   const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
-  }
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
   requireAuth();
 </script>
 
@@ -53,13 +52,29 @@
         </div>
       </div>
 
-      <!-- 💰 小計與付款 -->
+      <!-- 💰 付款區 -->
       <div class="col-lg-4">
         <div class="card shadow-sm">
           <div class="card-header bg-light fw-bold">付款資訊</div>
           <div class="card-body">
             <p>總金額：<span class="fw-bold text-primary">NT$<span id="cartTotal">0</span></span></p>
+
+            <!-- 💳 藍新金流付款按鈕 -->
+            <form id="newebpayForm" 
+                  action="https://us-central1-rzshop-auth.cloudfunctions.net/createOrder" 
+                  method="POST" 
+                  class="mt-3">
+              <input type="hidden" name="amount" id="payAmount" value="100">
+              <input type="hidden" name="email" id="payEmail" value="test@gmail.com">
+              <input type="hidden" name="item" id="payItem" value="阿智小舖商品">
+              <button type="submit" class="btn btn-success w-100">
+                💳 使用藍新金流付款
+              </button>
+            </form>
+
+            <!-- 🅿️ PayPal 付款 -->
             <div id="paypal-button-container" class="mt-3"></div>
+
             <button class="btn btn-outline-danger w-100 mt-3" onclick="Cart.clear()">清空購物車</button>
           </div>
         </div>
@@ -77,10 +92,23 @@
 <!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- PayPal SDK (Live 模式) -->
-<script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6yYpUs_ZJp1j-McFXzZHOeNUdTsba8DiO13slQugPkVHFKCgw281CbFe-T&currency=TWD" data-sdk-integration-source="button-factory" onload="document.dispatchEvent(new Event('paypal:loaded'))"></script>
+<!-- PayPal SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6yYpUs_ZJp1j-McFXzZHOeNUdTsba8DiO13slQugPkVHFKCgw281CbFe-T&currency=TWD" 
+        data-sdk-integration-source="button-factory" 
+        onload="document.dispatchEvent(new Event('paypal:loaded'))">
+</script>
 
 <!-- 主程式 -->
-<script src="js/app.js?v=14" defer></script>
+<script src="js/app.js?v=20" defer></script>
+
+<!-- 🧠 自動帶入金額與 email -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const total = localStorage.getItem("cartTotal") || 100;
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  document.getElementById("payAmount").value = total;
+  document.getElementById("payEmail").value = user.email || "test@gmail.com";
+});
+</script>
 </body>
 </html>
