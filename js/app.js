@@ -3,6 +3,14 @@ const DATA_URL = `${ROOT}/data/items.json`;
 const CART_KEY = 'rzshop_cart';
 let itemsCache = null;
 
+function sanitizeQuantity(value) {
+  const floored = Math.floor(Number(value));
+  if (!Number.isFinite(floored) || floored < 1) {
+    return 1;
+  }
+  return floored;
+}
+
 const Cart = {
   normalize(raw) {
     if (!raw || raw.id === undefined || raw.id === null) return null;
@@ -10,7 +18,7 @@ const Cart = {
       id: String(raw.id),
       title: (raw.title ?? '').toString(),
       price: Number(raw.price) || 0,
-      qty: Math.max(1, Number(raw.qty) || 1),
+      qty: sanitizeQuantity(raw.qty ?? 1),
       thumbnail: raw.thumbnail ?? ''
     };
   },
@@ -40,7 +48,7 @@ const Cart = {
     if (!entry) return;
     const cart = Cart.get();
     const existing = cart.find(x => x.id === entry.id);
-    if (existing) existing.qty += 1;
+    if (existing) existing.qty = sanitizeQuantity(existing.qty + 1);
     else cart.push(entry);
     Cart.set(cart);
     Cart.render();
@@ -51,7 +59,7 @@ const Cart = {
     Cart.render();
   },
   updateQty(id, value) {
-    const qty = Math.max(1, Number(value) || 1);
+    const qty = sanitizeQuantity(value);
     const cart = Cart.get();
     const target = cart.find(x => x.id === id);
     if (target) {
@@ -101,7 +109,7 @@ const Cart = {
               <div class="cart-item-actions">
                 <div class="cart-item-qty-group">
                   <label class="form-label" for="qty-${item.id}">數量</label>
-                  <input id="qty-${item.id}" type="number" min="1" value="${item.qty}" class="form-control form-control-sm cart-item-qty" data-action="qty" data-id="${item.id}">
+                  <input id="qty-${item.id}" type="number" min="1" step="1" inputmode="numeric" pattern="[0-9]*" value="${item.qty}" class="form-control form-control-sm cart-item-qty" data-action="qty" data-id="${item.id}">
                 </div>
                 <div class="cart-item-subtotal">
                   <span class="small text-muted">小計</span>
@@ -120,7 +128,11 @@ const Cart = {
         const targetId = event.currentTarget.getAttribute('data-id');
         const value = event.currentTarget.value;
         if (map.has(targetId)) {
-          Cart.updateQty(targetId, value);
+          const sanitized = sanitizeQuantity(value);
+          if (String(sanitized) !== String(value)) {
+            event.currentTarget.value = sanitized;
+          }
+          Cart.updateQty(targetId, sanitized);
         }
       });
     });

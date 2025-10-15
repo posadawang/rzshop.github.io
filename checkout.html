@@ -81,6 +81,8 @@
               💳 使用藍新金流付款
             </button>
 
+            <div id="paymentFeedback" class="alert d-none mt-3" role="alert"></div>
+
             <button class="btn btn-outline-danger w-100 mt-3" onclick="Cart.clear()">清空購物車</button>
           </div>
         </div>
@@ -108,22 +110,48 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const payButton = document.getElementById("newebpay-button");
+  const feedbackEl = document.getElementById("paymentFeedback");
   if (!payButton) return;
 
   const defaultLabel = payButton.innerHTML;
+
+  const clearMessage = () => {
+    if (!feedbackEl) return;
+    feedbackEl.className = "alert d-none mt-3";
+    feedbackEl.textContent = "";
+  };
+
+  const showMessage = (variant, text) => {
+    if (!feedbackEl) {
+      if (variant === "danger") {
+        console.error(text);
+      } else {
+        console.log(text);
+      }
+      return;
+    }
+    feedbackEl.className = `alert alert-${variant} mt-3`;
+    feedbackEl.textContent = text;
+    feedbackEl.classList.remove("d-none");
+  };
 
   const setLoading = isLoading => {
     payButton.disabled = isLoading;
     payButton.dataset.loading = isLoading ? "true" : "false";
     payButton.innerHTML = isLoading ? "⏳ 付款建立中..." : defaultLabel;
+    if (isLoading) {
+      clearMessage();
+    }
   };
 
   payButton.addEventListener("click", async () => {
     if (payButton.dataset.loading === "true") return;
 
+    clearMessage();
+
     const total = Math.round(Number(Cart.total()) || 0);
     if (!total || total <= 0) {
-      alert("購物車是空的！");
+      showMessage("warning", "購物車是空的，請先選擇商品再結帳。");
       return;
     }
 
@@ -132,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = user?.email || user?.providerData?.find(p => p?.email)?.email || "";
 
     if (!email) {
-      alert("正在取得會員資料，請稍後再試或重新登入。");
+      showMessage("warning", "正在取得會員資料，請稍後再試或重新登入。");
       return;
     }
 
@@ -157,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/createOrder", {
+      const response = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/api/createOrder", {
         method: "POST",
         mode: "cors",
         cache: "no-store",
@@ -183,13 +211,14 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("無法開啟付款頁面，請確認瀏覽器未封鎖視窗。");
       }
 
+      showMessage("info", "正在前往藍新金流付款頁面，請稍候...");
       redirectWindow.document.open();
       redirectWindow.document.write(text);
       redirectWindow.document.close();
     } catch (err) {
       console.error("付款建立失敗：", err);
       const message = err instanceof Error ? err.message : "付款建立失敗，請稍後再試！";
-      alert(`付款建立失敗：${message}`);
+      showMessage("danger", `付款建立失敗：${message}`);
     } finally {
       setLoading(false);
     }
