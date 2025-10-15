@@ -434,12 +434,15 @@ function initCheckoutPage() {
   const mount = document.getElementById('cartItems');
   if (!mount) return;
   Cart.render();
+  updateNewebpayFormFields({ items: Cart.get(), total: Cart.total() });
   renderPayPalButtons(Cart.total());
   document.addEventListener('paypal:loaded', () => {
     renderPayPalButtons(Cart.total());
   });
   document.addEventListener('rzshop:cart-changed', event => {
-    const total = event.detail?.total ?? Cart.total();
+    const detail = event.detail || {};
+    updateNewebpayFormFields(detail);
+    const total = detail.total ?? Cart.total();
     renderPayPalButtons(total);
   });
 }
@@ -491,6 +494,41 @@ function renderPayPalButtons(total) {
       alert('付款初始化失敗，請稍後再試。');
     }
   }).render('#paypal-button-container');
+}
+
+function updateNewebpayFormFields(detail = {}) {
+  const amountInput = document.getElementById('payAmount');
+  const emailInput = document.getElementById('payEmail');
+  const itemInput = document.getElementById('payItem');
+
+  const total = detail.total ?? Cart.total();
+  const items = detail.items ?? Cart.get();
+
+  if (amountInput) {
+    const amount = Math.max(1, Math.round(Number(total) || 0));
+    amountInput.value = String(amount);
+  }
+
+  if (itemInput) {
+    const summary = Array.isArray(items)
+      ? items.map(item => `${item.title || item.id}x${item.qty}`).join(', ')
+      : '';
+    itemInput.value = summary || '阿智小舖商品';
+  }
+
+  if (emailInput) {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user?.email) {
+        emailInput.value = user.email;
+      }
+    } catch (err) {
+      console.warn('Unable to parse user info from storage', err);
+    }
+    if (!emailInput.value) {
+      emailInput.value = 'test@gmail.com';
+    }
+  }
 }
 
 function initFooterYear() {

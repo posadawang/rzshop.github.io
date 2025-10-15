@@ -1,0 +1,16 @@
+{
+  "name": "rzshop-functions",
+  "version": "1.0.0",
+  "description": "Firebase Functions for rzshop payment integrations",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.8.0"
+  }
+}
