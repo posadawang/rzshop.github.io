@@ -1,7 +1,13 @@
 const ROOT = location.pathname.startsWith('/rzshop.github.io') ? '/rzshop.github.io' : '';
-const DATA_URL = `${ROOT}//rzshop.github.io/data/items.json`;
+const DATA_URL = `${ROOT}/data/items.json`;
 const CART_KEY = 'rzshop_cart';
 let itemsCache = null;
+let currentUser = typeof window !== 'undefined' ? window.__rzAuthUser ?? null : null;
+
+document.addEventListener('rzshop:auth-changed', event => {
+  currentUser = event.detail?.user ?? null;
+  renderPayPalButtons(Cart.total());
+});
 
 const Cart = {
   normalize(raw) {
@@ -138,6 +144,11 @@ const Cart = {
     if (totalEl) totalEl.textContent = formatCurrency(Cart.total());
   }
 };
+
+// 確保 Cart 可供行內事件處理器使用
+if (typeof window !== 'undefined') {
+  window.Cart = Cart;
+}
 
 function formatCurrency(value) {
   return Number(value || 0).toLocaleString('zh-TW');
@@ -317,7 +328,8 @@ function initIndexPage() {
   const cards = document.getElementById('cards');
   if (!cards) return;
   cards.innerHTML = '<div class="text-center text-muted py-5 w-100">載入商品中...</div>';
-  bindSearch('all', 'cards', 'searchInput', 'resultMeta').then(controller => {
+  const initialCategory = cards.dataset.category || 'all';
+  bindSearch(initialCategory, 'cards', 'searchInput', 'resultMeta').then(controller => {
     initCategoryButtons(controller);
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) {
@@ -442,6 +454,11 @@ function renderPayPalButtons(total) {
   const container = document.getElementById('paypal-button-container');
   if (!container) return;
   container.innerHTML = '';
+
+  if (!currentUser) {
+    container.innerHTML = '<div class="alert alert-warning small mb-0">請先登入會員後再進行付款。</div>';
+    return;
+  }
 
   if (total <= 0) {
     container.innerHTML = '<div class="text-muted small">購物車內沒有商品。</div>';
