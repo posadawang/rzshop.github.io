@@ -25,14 +25,6 @@
     </a>
   </div>
 </nav>
-<script type="module">
-  import { logout } from "./js/firebase.js";
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
-  }
-</script>
-
 <main class="py-4">
   <div class="container" id="productContainer"></div>
 </main>
@@ -42,6 +34,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js?v=14" defer></script>
+<script type="module" src="js/app.js?v=26"></script>
 </body>
 </html>

@@ -81,42 +81,6 @@
 <script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6yYpUs_ZJp1j-McFXzZHOeNUdTsba8DiO13slQugPkVHFKCgw281CbFe-T&currency=TWD" onload="document.dispatchEvent(new Event('paypal:loaded'))"></script>
 
 <!-- 主程式 -->
-<script src="js/app.js?v=25" defer></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const payBtn = document.getElementById("newebpay-button");
-  if (payBtn) {
-    payBtn.addEventListener("click", async () => {
-      const total = Cart.total();
-      if (total <= 0) return alert("購物車為空，無法結帳！");
-
-      try {
-        const res = await fetch("https://us-central1-rzshop-auth.cloudfunctions.net/api/createOrder", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: total,
-            email: "test@example.com",
-            itemDesc: "阿智小舖商品"
-          })
-        });
-
-        const html = await res.text();
-        if (res.ok) {
-          const newWin = window.open("", "_blank");
-          newWin.document.write(html);
-        } else {
-          console.error("CreateOrder failed:", html);
-          alert("付款建立失敗，請稍後再試。");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("付款建立失敗，請檢查網路或稍後再試。");
-      }
-    });
-  }
-});
-</script>
+<script type="module" src="js/app.js?v=26"></script>
 </body>
 </html>

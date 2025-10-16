@@ -23,12 +23,17 @@
     import { registerUser } from "../js/firebase.js";
     const btn = document.getElementById("registerBtn");
     btn.addEventListener("click", async ()=>{
-      const email = document.getElementById("email").value.trim();
+      const emailInput = document.getElementById("email");
+      const email = emailInput.value.trim();
       const password = document.getElementById("password").value.trim();
       const confirm = document.getElementById("confirmPassword").value.trim();
       const err = document.getElementById("errorMsg");
       err.textContent="";
-      if(!email.includes("@") || !email.includes(".")){ err.textContent="請輸入有效的電子郵件"; return; }
+      if(!emailInput.checkValidity()){
+        err.textContent="請輸入有效的電子郵件";
+        emailInput.reportValidity();
+        return;
+      }
       if(password.length < 6){ err.textContent="密碼至少需 6 碼"; return; }
       if(password !== confirm){ err.textContent="兩次密碼不一致"; return; }
       try{ await registerUser(email,password); }catch(e){ err.textContent = e.message; }
