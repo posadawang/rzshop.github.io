@@ -67,6 +67,38 @@ const defaultConfig = {
   )
 };
 
+function validateNewebpayConfigOrThrow() {
+  const errors = [];
+
+  if (!defaultConfig.merchantId) {
+    errors.push('Merchant ID (NEWEBPAY_MERCHANT_ID) is not configured.');
+  }
+
+  if (!defaultConfig.hashKey) {
+    errors.push('HashKey (NEWEBPAY_HASH_KEY) is not configured.');
+  } else if (Buffer.from(defaultConfig.hashKey, 'utf8').length !== 32) {
+    errors.push('HashKey must be 32 bytes long.');
+  }
+
+  if (!defaultConfig.hashIV) {
+    errors.push('HashIV (NEWEBPAY_HASH_IV) is not configured.');
+  } else if (Buffer.from(defaultConfig.hashIV, 'utf8').length !== 16) {
+    errors.push('HashIV must be 16 bytes long.');
+  }
+
+  if (!defaultConfig.returnURL) {
+    errors.push('ReturnURL (NEWEBPAY_RETURN_URL) is not configured.');
+  }
+
+  if (!defaultConfig.notifyURL) {
+    errors.push('NotifyURL (NEWEBPAY_NOTIFY_URL) is not configured.');
+  }
+
+  if (errors.length) {
+    throw new Error(`NewebPay configuration error: ${errors.join(' ')}`);
+  }
+}
+
 const API_URL =
   defaultConfig.environment === 'production'
     ? 'https://core.newebpay.com/MPG/mpg_gateway'
@@ -154,6 +186,43 @@ function generateTradeSha(tradeInfo) {
     .update(`HashKey=${defaultConfig.hashKey}&${tradeInfo}&HashIV=${defaultConfig.hashIV}`)
     .digest('hex');
   return hash.toUpperCase();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildAutoSubmitFormHtml(action, fields) {
+  const inputs = Object.entries(fields)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(
+      ([name, value]) =>
+        `        <input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}" />`
+    )
+    .join('\n');
+
+  return `<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+</head>
+<body>
+  <form id="pay" method="post" action="${escapeHtml(action)}">
+${inputs}
+    <noscript>
+      <p>系統將帶您前往藍新金流完成付款，若未自動跳轉請按下方按鈕。</p>
+      <button type="submit">前往付款</button>
+    </noscript>
+  </form>
+  <script>document.getElementById('pay').submit();</script>
+</body>
+</html>`;
 }
 
 function decryptTradeInfo(tradeInfo) {
@@ -291,6 +360,8 @@ async function handleCreateOrder(req, res) {
     const rawBody = resolveRequestBody(req) || {};
     const body = typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {};
 
+    validateNewebpayConfigOrThrow();
+
     logger.info('📦 req.body', { body });
     console.log('📦 req.body:', body);
 
@@ -364,7 +435,8 @@ async function handleCreateOrder(req, res) {
       Email: email,
       ReturnURL: defaultConfig.returnURL,
       NotifyURL: defaultConfig.notifyURL,
-      ClientBackURL: appendOrderToClientUrl(orderId)
+      ClientBackURL: appendOrderToClientUrl(orderId),
+      LoginType: 0
     };
 
     const plainTradeInfo = querystring.stringify(tradeInfoData);
@@ -382,27 +454,12 @@ async function handleCreateOrder(req, res) {
       tradeSha
     });
 
-    const html =
-      '<!doctype html>' +
-      '<html lang="zh-Hant">' +
-      '<head>' +
-      '  <meta charset="utf-8">' +
-      '  <title>Redirecting...</title>' +
-      '</head>' +
-      '<body>' +
-      `  <form id="newebpay" method="post" action="${API_URL}">` +
-      `    <input type="hidden" name="MerchantID" value="${defaultConfig.merchantId}" />` +
-      `    <input type="hidden" name="TradeInfo" value="${tradeInfo}" />` +
-      `    <input type="hidden" name="TradeSha" value="${tradeSha}" />` +
-      '    <input type="hidden" name="Version" value="2.0" />' +
-      '    <noscript>' +
-      '      <p>請點擊下方按鈕前往付款</p>' +
-      '      <button type="submit">前往藍新金流付款</button>' +
-      '    </noscript>' +
-      '  </form>' +
-      "  <script>document.getElementById('newebpay').submit();</script>" +
-      '</body>' +
-      '</html>';
+    const html = buildAutoSubmitFormHtml(API_URL, {
+      MerchantID: defaultConfig.merchantId,
+      TradeInfo: tradeInfo,
+      TradeSha: tradeSha,
+      Version: '2.0'
+    });
 
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(html);
