@@ -10,9 +10,13 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container">
-    <a class="navbar-brand fw-bold" href="index.html">
+  <div class="container d-flex align-items-center gap-3">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
       <img src="assets/images/rzshopp.jpg" alt="" width="28" height="28" class="me-2">阿智小舖
+    </a>
+    <a href="checkout.html" class="btn btn-outline-primary position-relative ms-auto">
+      購物車
+      <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-cart-badge>0</span>
     </a>
   </div>
 </nav>
@@ -72,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="https://www.paypal.com/sdk/js?client-id=AYWvc93OqucmqJYzkBUjHt6yYpUs_ZJp1j-McFXzZHOeNUdTsba8DiO13slQugPkVHFKCgw281CbFe-T&currency=TWD"></script>
 
 <!-- 主程式 -->
-<script src="js/app.js?v=30"></script>
+<script src="js/app.js?v=31"></script>
 
 <!-- 初始化購物車與結帳 -->
 <script>
