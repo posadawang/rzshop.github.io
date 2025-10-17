@@ -31,8 +31,12 @@ const Cart = {
   clear() { Cart.set([]); Cart.render(); },
   total() { return Cart.get().reduce((a,b)=>a+b.price*b.qty,0); },
   updateBadge() {
-    const b=document.getElementById('cartCount');
-    if(b) b.textContent=Cart.get().reduce((a,b)=>a+b.qty,0);
+    const count = Cart.get().reduce((a,b)=>a+b.qty,0);
+    const badge = document.getElementById('cartCount');
+    if(badge) badge.textContent = count;
+    document.querySelectorAll('[data-cart-badge]').forEach(el => {
+      el.textContent = count;
+    });
   },
   render() {
     const c=document.getElementById('cartItems'),t=document.getElementById('cartTotal');
