@@ -164,12 +164,13 @@
     "title": "B002 高戰力帳號",
     "price": 320,
     "description": "多位角色高等級，高杯數。",
-    "thumbnail": "assets/images/a001.jpg",
+    "thumbnail": "assets/images/IMG_9640.jpeg",
     "gallery": [
-      "assets/images/011.png",
-      "assets/images/011.png",
-      "assets/images/011.png",
-      "assets/images/011.png"
+      "assets/images/IMG_9639.jpeg",
+      "assets/images/IMG_9641.jpeg",
+      "assets/images/IMG_9642.jpeg",
+      "assets/images/IMG_9644.jpeg",
+      "assets/images/IMG_9643.jpeg"
     ],
     "link": "product.html?id=B002"
   },
