@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單完成 - 阿智小舖</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-gamepad me-2"></i>阿智小舖
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <main class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- 成功訊息 -->
+                <div class="text-center mb-5">
+                    <div class="success-icon mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-success mb-3">訂單提交成功！</h2>
+                    <p class="lead text-muted">感謝您的購買，我們將盡快處理您的訂單</p>
+                </div>
+
+                <!-- 訂單資訊 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>訂單資訊</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>訂單編號：</strong><span id="orderId">-</span></p>
+                                <p><strong>訂單時間：</strong><span id="orderTime">-</span></p>
+                                <p><strong>付款方式：</strong><span id="paymentMethod">-</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>訂單總額：</strong><span class="text-danger fw-bold" id="orderTotal">-</span></p>
+                                <p><strong>訂單狀態：</strong><span class="badge bg-warning" id="orderStatus">處理中</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 商品清單 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-shopping-bag me-2"></i>商品清單</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderItems">
+                            <!-- 訂單商品將在這裡顯示 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收件人資訊 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>收件人資訊</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="customerInfo">
+                            <!-- 收件人資訊將在這裡顯示 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 後續步驟 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>後續步驟</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <i class="fas fa-envelope text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>確認郵件</h6>
+                                <p class="small text-muted">我們已發送訂單確認郵件至您的信箱</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <i class="fas fa-credit-card text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>付款處理</h6>
+                                <p class="small text-muted">付款完成後，我們將開始處理您的訂單</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <i class="fas fa-shipping-fast text-info" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>商品交付</h6>
+                                <p class="small text-muted">我們將在24小時內交付您的商品</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="text-center">
+                    <a href="index.html" class="btn btn-primary me-3">
+                        <i class="fas fa-home me-2"></i>回到首頁
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="printOrder()">
+                        <i class="fas fa-print me-2"></i>列印訂單
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 腳本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/order-complete.js"></script>
+</body>
+</html>

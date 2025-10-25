@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>結帳 - 阿智小舖</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-gamepad me-2"></i>阿智小舖
+            </a>
+        </div>
+    </nav>
+
+    <!-- 結帳進度 -->
+    <div class="bg-light py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center">
+                        <div class="d-flex align-items-center">
+                            <div class="step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">購物車</div>
+                            </div>
+                            <div class="step-line active"></div>
+                            <div class="step active">
+                                <div class="step-number">2</div>
+                                <div class="step-label">填寫資料</div>
+                            </div>
+                            <div class="step-line"></div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">付款</div>
+                            </div>
+                            <div class="step-line"></div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-label">完成</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <main class="container my-5">
+        <div class="row">
+            <!-- 訂單資訊 -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>訂單資訊</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderItems">
+                            <!-- 訂單商品將在這裡顯示 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收件人資訊 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>收件人資訊</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="checkoutForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerName" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="customerName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerPhone" class="form-label">電話 <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="customerPhone" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customerEmail" class="form-label">電子郵件 <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="customerEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="deliveryAddress" class="form-label">收件地址 <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="deliveryAddress" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">備註</label>
+                                <textarea class="form-control" id="notes" rows="2" placeholder="如有特殊需求請在此說明"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 付款方式 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>付款方式</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit" checked>
+                                    <label class="form-check-label" for="creditCard">
+                                        <i class="fas fa-credit-card me-2"></i>信用卡
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="atm" value="atm">
+                                    <label class="form-check-label" for="atm">
+                                        <i class="fas fa-university me-2"></i>ATM轉帳
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 訂單摘要 -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 100px;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>訂單摘要</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderSummary">
+                            <!-- 訂單摘要將在這裡顯示 -->
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>總計：</strong>
+                            <strong class="text-danger" id="orderTotal">NT$ 0</strong>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3" id="submitOrder">
+                            <i class="fas fa-lock me-2"></i>確認訂單
+                        </button>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                安全加密交易
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 腳本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/checkout.js"></script>
+</body>
+</html>

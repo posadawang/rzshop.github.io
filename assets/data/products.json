@@ -1,0 +1,265 @@
+[
+  {
+    "id": "A001",
+    "category": "部落衝突",
+    "title": "A001 五工人滿防帳號",
+    "price": 350,
+    "originalPrice": 400,
+    "description": "TH15，滿防禦、滿科技，寶石2000+。村莊佈局完整，防禦設施全滿級，科技樹完整，適合高端玩家。",
+    "thumbnail": "assets/images/a001.jpg",
+    "gallery": [
+      "assets/images/a001_1.jpg",
+      "assets/images/a001_2.jpg",
+      "assets/images/a001_3.jpg"
+    ],
+    "stock": 5,
+    "tags": ["滿防", "高本", "寶石多"],
+    "rating": 4.8,
+    "reviews": 12,
+    "featured": true
+  },
+  {
+    "id": "A002",
+    "category": "部落衝突",
+    "title": "A002 速本實用帳號",
+    "price": 280,
+    "originalPrice": 320,
+    "description": "TH14 實用配置，部隊齊全。適合中階玩家，配置實用，升級空間大。",
+    "thumbnail": "assets/images/a002.jpg",
+    "gallery": [
+      "assets/images/a002_1.jpg",
+      "assets/images/a002_2.jpg"
+    ],
+    "stock": 8,
+    "tags": ["實用", "中本", "性價比高"],
+    "rating": 4.5,
+    "reviews": 8,
+    "featured": false
+  },
+  {
+    "id": "A003",
+    "category": "部落衝突",
+    "title": "A003 滿科技村莊",
+    "price": 420,
+    "originalPrice": 480,
+    "description": "高等防禦、兵種滿級。科技樹完整，所有兵種和法術都達到最高等級。",
+    "thumbnail": "assets/images/a003.jpg",
+    "gallery": [
+      "assets/images/a003_1.jpg",
+      "assets/images/a003_2.jpg"
+    ],
+    "stock": 3,
+    "tags": ["滿科技", "高本", "稀有"],
+    "rating": 4.9,
+    "reviews": 15,
+    "featured": true
+  },
+  {
+    "id": "A004",
+    "category": "部落衝突",
+    "title": "A004 高本寶石帳號",
+    "price": 390,
+    "originalPrice": 450,
+    "description": "寶石 3000+，方便改名。村莊等級高，寶石充足，適合需要頻繁改名的玩家。",
+    "thumbnail": "assets/images/a004.jpg",
+    "gallery": [
+      "assets/images/a004_1.jpg"
+    ],
+    "stock": 6,
+    "tags": ["寶石多", "高本", "改名"],
+    "rating": 4.6,
+    "reviews": 10,
+    "featured": false
+  },
+  {
+    "id": "A005",
+    "category": "部落衝突",
+    "title": "A005 雷龍流配置",
+    "price": 360,
+    "originalPrice": 400,
+    "description": "雷龍全開，援軍強勢。專為雷龍流派設計的村莊配置，進攻能力強。",
+    "thumbnail": "assets/images/a005.jpg",
+    "gallery": [
+      "assets/images/a005_1.jpg"
+    ],
+    "stock": 4,
+    "tags": ["雷龍", "進攻型", "高本"],
+    "rating": 4.7,
+    "reviews": 7,
+    "featured": true
+  },
+  {
+    "id": "B001",
+    "category": "荒野亂鬥",
+    "title": "B001 稀有造型帳號",
+    "price": 350,
+    "originalPrice": 400,
+    "description": "多款限定造型，角色齊全。包含多個限定造型和稀有角色，收藏價值高。",
+    "thumbnail": "assets/images/b001.jpg",
+    "gallery": [
+      "assets/images/b001_1.jpg",
+      "assets/images/b001_2.jpg"
+    ],
+    "stock": 7,
+    "tags": ["稀有造型", "收藏", "角色齊全"],
+    "rating": 4.8,
+    "reviews": 14,
+    "featured": true
+  },
+  {
+    "id": "B002",
+    "category": "荒野亂鬥",
+    "title": "B002 高戰力帳號",
+    "price": 320,
+    "originalPrice": 380,
+    "description": "多位角色高等級，高杯數。多個角色達到高等級，總杯數高，適合競技玩家。",
+    "thumbnail": "assets/images/b002.jpg",
+    "gallery": [
+      "assets/images/b002_1.jpg"
+    ],
+    "stock": 5,
+    "tags": ["高杯數", "高等級", "競技"],
+    "rating": 4.6,
+    "reviews": 9,
+    "featured": false
+  },
+  {
+    "id": "B003",
+    "category": "荒野亂鬥",
+    "title": "B003 造型收藏向",
+    "price": 400,
+    "originalPrice": 450,
+    "description": "皮膚多、收藏完整。專為造型收藏愛好者設計，包含大量稀有造型。",
+    "thumbnail": "assets/images/b003.jpg",
+    "gallery": [
+      "assets/images/b003_1.jpg",
+      "assets/images/b003_2.jpg"
+    ],
+    "stock": 3,
+    "tags": ["造型多", "收藏", "稀有"],
+    "rating": 4.9,
+    "reviews": 11,
+    "featured": true
+  },
+  {
+    "id": "B004",
+    "category": "荒野亂鬥",
+    "title": "B004 新手入門實惠",
+    "price": 180,
+    "originalPrice": 220,
+    "description": "入門友善，升級空間大。適合新手玩家，價格實惠，有良好的升級空間。",
+    "thumbnail": "assets/images/b004.jpg",
+    "gallery": [
+      "assets/images/b004_1.jpg"
+    ],
+    "stock": 12,
+    "tags": ["新手", "實惠", "入門"],
+    "rating": 4.3,
+    "reviews": 6,
+    "featured": false
+  },
+  {
+    "id": "C001",
+    "category": "皇室戰爭",
+    "title": "C001 全卡牌解鎖",
+    "price": 420,
+    "originalPrice": 480,
+    "description": "卡池完整，上分穩定。所有卡牌都已解鎖，卡牌等級高，適合競技玩家。",
+    "thumbnail": "assets/images/c001.jpg",
+    "gallery": [
+      "assets/images/c001_1.jpg",
+      "assets/images/c001_2.jpg"
+    ],
+    "stock": 4,
+    "tags": ["全卡牌", "高本", "競技"],
+    "rating": 4.8,
+    "reviews": 13,
+    "featured": true
+  },
+  {
+    "id": "C002",
+    "category": "皇室戰爭",
+    "title": "C002 高段位帳號",
+    "price": 460,
+    "originalPrice": 520,
+    "description": "歷史高分亮眼，牌組齊。曾經達到高段位，牌組配置完整，適合高端玩家。",
+    "thumbnail": "assets/images/c002.jpg",
+    "gallery": [
+      "assets/images/c002_1.jpg"
+    ],
+    "stock": 2,
+    "tags": ["高段位", "稀有", "高端"],
+    "rating": 4.9,
+    "reviews": 8,
+    "featured": true
+  },
+  {
+    "id": "C003",
+    "category": "皇室戰爭",
+    "title": "C003 皮膚收藏號",
+    "price": 390,
+    "originalPrice": 440,
+    "description": "塔皮膚與表情豐富。包含多個稀有塔皮膚和表情，收藏價值高。",
+    "thumbnail": "assets/images/c003.jpg",
+    "gallery": [
+      "assets/images/c003_1.jpg"
+    ],
+    "stock": 6,
+    "tags": ["皮膚多", "收藏", "表情"],
+    "rating": 4.7,
+    "reviews": 10,
+    "featured": false
+  },
+  {
+    "id": "D001",
+    "category": "其他遊戲",
+    "title": "D001 原神 入門帳號",
+    "price": 260,
+    "originalPrice": 300,
+    "description": "原神示意：基礎角色、日常輕鬆。包含基礎角色，適合新手玩家入門。",
+    "thumbnail": "assets/images/d001.jpg",
+    "gallery": [
+      "assets/images/d001_1.jpg"
+    ],
+    "stock": 10,
+    "tags": ["原神", "入門", "基礎角色"],
+    "rating": 4.4,
+    "reviews": 5,
+    "featured": false
+  },
+  {
+    "id": "D002",
+    "category": "其他遊戲",
+    "title": "D002 原神 觀光帳號",
+    "price": 300,
+    "originalPrice": 350,
+    "description": "原神示意：探索向、資源適中。適合喜歡探索的玩家，資源配置合理。",
+    "thumbnail": "assets/images/d002.jpg",
+    "gallery": [
+      "assets/images/d002_1.jpg",
+      "assets/images/d002_2.jpg"
+    ],
+    "stock": 8,
+    "tags": ["原神", "探索", "觀光"],
+    "rating": 4.5,
+    "reviews": 7,
+    "featured": false
+  },
+  {
+    "id": "D003",
+    "category": "其他遊戲",
+    "title": "D003 原神 收藏向帳號",
+    "price": 450,
+    "originalPrice": 500,
+    "description": "原神示意：收藏與造型為主。包含多個稀有角色和造型，收藏價值高。",
+    "thumbnail": "assets/images/d003.jpg",
+    "gallery": [
+      "assets/images/d003_1.jpg"
+    ],
+    "stock": 3,
+    "tags": ["原神", "收藏", "稀有角色"],
+    "rating": 4.8,
+    "reviews": 9,
+    "featured": true
+  }
+]
