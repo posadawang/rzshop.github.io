@@ -1,10 +1,16 @@
-// 結帳頁面功能
+// checkout.js - for GitHub front-end
+// 結帳頁面功能（已調整：前端不做 TradeInfo 加密，改由後端處理）
+
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
-// 藍新金流設定
+// API 與後端位置（請確認你的 InfinityFree 網址）
+const API_BASE = 'https://rzshop.42web.io/api'; // <- 如果你的 InfinityFree 不同，請修改這裡
+
+// 藍新金流設定（前端僅顯示用，實際加密 / TradeSha 由後端產生）
 const NEWEBPAY_CONFIG = {
-    MerchantID: 'MS123456789', // 您的商店代碼
+    MerchantID: 'MS1624139607', // 改成你的真實商店代碼
+    // HashKey/HashIV 不應在前端公開，保留但不使用
     HashKey: 'b6LpV3yq5SZFi2QAqpJAvFiB729kIKf6',
     HashIV: 'PONYLln8z3fr2CkC',
     ReturnURL: window.location.origin + '/return.html',
@@ -12,285 +18,254 @@ const NEWEBPAY_CONFIG = {
     CustomerURL: window.location.origin + '/customer.html'
 };
 
-// 初始化結帳頁面
+// 將 cart 的 quantity 正規化為整數（避免小數）
+function normalizeCart(c) {
+    if (!Array.isArray(c)) return [];
+    return c.map(it => {
+        return {
+            ...it,
+            quantity: Math.max(1, parseInt(it.quantity, 10) || 1),
+            price: Number(it.price) || 0
+        };
+    });
+}
+
+cart = normalizeCart(cart);
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeCheckout();
 });
 
-// 初始化結帳
+// 初始化
 function initializeCheckout() {
-    // 檢查用戶是否登入
+    // 檢查登入
     if (!currentUser) {
         showAlert('請先登入', 'warning');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
+        setTimeout(() => window.location.href = 'index.html', 1500);
         return;
     }
 
-    // 檢查購物車是否為空
-    if (cart.length === 0) {
+    if (!cart.length) {
         showAlert('購物車是空的', 'warning');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
+        setTimeout(() => window.location.href = 'index.html', 1500);
         return;
     }
 
-    // 載入訂單資訊
     loadOrderItems();
     loadOrderSummary();
     setupEventListeners();
-    
-    // 預填用戶資料
     fillUserData();
 }
 
-// 設定事件監聽器
 function setupEventListeners() {
-    // 提交訂單
-    document.getElementById('submitOrder').addEventListener('click', handleSubmitOrder);
-    
-    // 表單驗證
-    document.getElementById('checkoutForm').addEventListener('input', validateForm);
+    const submitBtn = document.getElementById('submitOrder');
+    if (submitBtn) submitBtn.addEventListener('click', handleSubmitOrder);
+
+    const form = document.getElementById('checkoutForm');
+    if (form) form.addEventListener('input', validateForm);
 }
 
-// 載入訂單商品
 function loadOrderItems() {
     const container = document.getElementById('orderItems');
-    
-    container.innerHTML = cart.map(item => `
+    if (!container) return;
+
+    container.innerHTML = cart.map(item => {
+        const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+        const subtotal = (Number(item.price) || 0) * qty;
+        const thumb = item.thumbnail || 'https://via.placeholder.com/80x80?text=商品';
+        return `
         <div class="d-flex align-items-center py-3 border-bottom">
-            <img src="${item.thumbnail}" class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 0.375rem;"
+            <img src="${thumb}" class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 0.375rem;"
                  onerror="this.src='https://via.placeholder.com/80x80?text=商品'">
             <div class="flex-grow-1">
-                <h6 class="mb-1">${item.title}</h6>
-                <div class="text-muted small">數量: ${item.quantity}</div>
+                <h6 class="mb-1">${escapeHtml(item.title || '')}</h6>
+                <div class="text-muted small">數量: ${qty}</div>
             </div>
             <div class="text-end">
-                <div class="fw-bold">NT$ ${item.price}</div>
-                <div class="text-muted small">小計: NT$ ${item.price * item.quantity}</div>
+                <div class="fw-bold">NT$ ${Number(item.price).toLocaleString()}</div>
+                <div class="text-muted small">小計: NT$ ${subtotal.toLocaleString()}</div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
-// 載入訂單摘要
 function loadOrderSummary() {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = 0; // 免運費
+    const subtotal = cart.reduce((sum, it) => {
+        const qty = Math.max(1, parseInt(it.quantity, 10) || 1);
+        return sum + (Number(it.price) || 0) * qty;
+    }, 0);
+    const shipping = 0;
     const total = subtotal + shipping;
-    
-    document.getElementById('orderSummary').innerHTML = `
-        <div class="d-flex justify-content-between mb-2">
-            <span>商品小計:</span>
-            <span>NT$ ${subtotal}</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-            <span>運費:</span>
-            <span class="text-success">免費</span>
-        </div>
-    `;
-    
-    document.getElementById('orderTotal').textContent = `NT$ ${total}`;
-}
 
-// 預填用戶資料
-function fillUserData() {
-    if (currentUser) {
-        document.getElementById('customerName').value = currentUser.name || '';
-        document.getElementById('customerPhone').value = currentUser.phone || '';
-        document.getElementById('customerEmail').value = currentUser.email || '';
+    const summaryEl = document.getElementById('orderSummary');
+    if (summaryEl) {
+        summaryEl.innerHTML = `
+            <div class="d-flex justify-content-between mb-2"><span>商品小計:</span><span>NT$ ${subtotal.toLocaleString()}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>運費:</span><span class="text-success">免費</span></div>
+        `;
     }
+
+    const totalEl = document.getElementById('orderTotal');
+    if (totalEl) totalEl.textContent = `NT$ ${total.toLocaleString()}`;
 }
 
-// 表單驗證
+function fillUserData() {
+    if (!currentUser) return;
+    const nameEl = document.getElementById('customerName');
+    const phoneEl = document.getElementById('customerPhone');
+    const emailEl = document.getElementById('customerEmail');
+    if (nameEl) nameEl.value = currentUser.name || '';
+    if (phoneEl) phoneEl.value = currentUser.phone || '';
+    if (emailEl) emailEl.value = currentUser.email || '';
+}
+
 function validateForm() {
     const form = document.getElementById('checkoutForm');
     const submitBtn = document.getElementById('submitOrder');
-    const isValid = form.checkValidity();
-    
-    submitBtn.disabled = !isValid;
+    if (!form || !submitBtn) return;
+    submitBtn.disabled = !form.checkValidity();
 }
 
-// 處理提交訂單
-async function handleSubmitOrder() {
+async function handleSubmitOrder(evt) {
+    evt && evt.preventDefault && evt.preventDefault();
+
     const form = document.getElementById('checkoutForm');
-    
+    if (!form) return;
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
     }
 
-    // 收集訂單資料
     const orderData = {
         customer: {
-            name: document.getElementById('customerName').value,
-            phone: document.getElementById('customerPhone').value,
-            email: document.getElementById('customerEmail').value,
-            address: document.getElementById('deliveryAddress').value,
-            notes: document.getElementById('notes').value
+            name: document.getElementById('customerName').value.trim(),
+            phone: document.getElementById('customerPhone').value.trim(),
+            email: document.getElementById('customerEmail').value.trim(),
+            address: document.getElementById('deliveryAddress').value.trim(),
+            notes: document.getElementById('notes').value.trim()
         },
-        items: cart,
+        items: normalizeCart(cart),
         paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-        total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        total: cart.reduce((sum, item) => sum + (Number(item.price) || 0) * Math.max(1, parseInt(item.quantity, 10) || 1), 0),
         orderId: generateOrderId(),
         timestamp: new Date().toISOString()
     };
 
-    try {
-        // 顯示載入狀態
-        const submitBtn = document.getElementById('submitOrder');
-        const originalText = submitBtn.innerHTML;
+    const submitBtn = document.getElementById('submitOrder');
+    const originalHtml = submitBtn ? submitBtn.innerHTML : null;
+    if (submitBtn) {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>處理中...';
         submitBtn.disabled = true;
+    }
 
-        // 儲存訂單到本地儲存
-        const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    try {
+        // 本地儲存備份（非必要）
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         orders.push(orderData);
         localStorage.setItem('orders', JSON.stringify(orders));
 
-        // 清空購物車
-        localStorage.removeItem('cart');
-        cart = [];
+        // 清空購物車（在成功跳轉後也會清）
+        // localStorage.removeItem('cart');
 
-        // 根據付款方式處理
         if (orderData.paymentMethod === 'credit') {
             await processCreditCardPayment(orderData);
-        } else if (orderData.paymentMethod === 'atm') {
+        } else {
             await processATMPayment(orderData);
         }
 
-    } catch (error) {
-        console.error('訂單處理失敗:', error);
-        showAlert('訂單處理失敗，請重試', 'danger');
-        
-        // 恢復按鈕狀態
-        const submitBtn = document.getElementById('submitOrder');
-        submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>確認訂單';
-        submitBtn.disabled = false;
+    } catch (err) {
+        console.error('訂單處理失敗', err);
+        showAlert('訂單處理失敗，請稍後再試', 'danger');
+        if (submitBtn) {
+            submitBtn.innerHTML = originalHtml || '<i class="fas fa-lock me-2"></i>確認訂單';
+            submitBtn.disabled = false;
+        }
     }
 }
 
-// 處理信用卡付款
+// --- 付款流程 --- //
+
 async function processCreditCardPayment(orderData) {
+    // 呼叫後端 createOrder.php，由後端產生 TradeInfo / TradeSha 並回傳 HTML 表單或 redirect 網頁
     try {
-        // 建立藍新金流付款表單
-        const paymentForm = createNewebPayForm(orderData);
-        
-        // 提交到藍新金流
-        document.body.appendChild(paymentForm);
-        paymentForm.submit();
-        
-    } catch (error) {
-        console.error('信用卡付款失敗:', error);
-        throw error;
+        const resp = await fetch(`${API_BASE}/createOrder.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: orderData.total,
+                email: orderData.customer.email,
+                itemDesc: `阿智小舖訂單 - ${orderData.items.length}項`,
+                orderId: orderData.orderId,
+                customer: orderData.customer
+            }),
+            // 若需要 CORS 或 cookie，視後端設定決定是否帶 credentials
+            // credentials: 'include'
+        });
+
+        // 如果後端回 HTML（直接送出藍新表單），把 HTML 寫回 document 並自動送出
+        const text = await resp.text();
+
+        // 偵測是否是 JSON 錯誤回應（例如 { error: '...' }）
+        try {
+            const maybeJson = JSON.parse(text);
+            if (maybeJson && maybeJson.error) {
+                throw new Error(maybeJson.error);
+            }
+            // 如果不是錯誤（意外）就繼續寫入 html
+        } catch (jsonErr) {
+            // 若 JSON.parse 例外，代表回傳可能是 HTML（我們預期的情況）
+        }
+
+        // 把後端回傳的 html 放到頁面並執行，通常後端會回一個表單並 auto-submit
+        document.open();
+        document.write(text);
+        document.close();
+
+        // 若後端只是回一個 redirect url 的 JSON，可能要改成用 location.href 跳轉
+        // (上面已處理普遍 HTML case)
+    } catch (err) {
+        console.error('信用卡付款發生錯誤:', err);
+        showAlert('建立付款失敗，請稍後再試', 'danger');
+        const submitBtn = document.getElementById('submitOrder');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>確認訂單';
+            submitBtn.disabled = false;
+        }
+        throw err;
     }
 }
 
-// 處理ATM轉帳
 async function processATMPayment(orderData) {
-    // 模擬ATM轉帳處理
-    showAlert('ATM轉帳資訊已發送至您的信箱', 'success');
-    
-    // 跳轉到完成頁面
+    showAlert('ATM 付款資訊將以電子郵件寄出（此處為模擬）', 'success');
+    // 真實情況你可以呼叫後端產生 ATM 指示再回應使用者
     setTimeout(() => {
         window.location.href = `order-complete.html?orderId=${orderData.orderId}`;
-    }, 2000);
+    }, 1500);
 }
 
-// 建立藍新金流付款表單
-function createNewebPayForm(orderData) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://ccore.newebpay.com/MPG/mpg_gateway';
-    form.style.display = 'none';
+// --- 工具函式 --- //
 
-    // 基本參數
-    const params = {
-        MerchantID: NEWEBPAY_CONFIG.MerchantID,
-        TradeInfo: encryptTradeInfo(orderData),
-        TradeSha: generateTradeSha(orderData),
-        Version: '2.0'
-    };
-
-    // 建立表單欄位
-    Object.keys(params).forEach(key => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = params[key];
-        form.appendChild(input);
-    });
-
-    return form;
-}
-
-// 加密交易資訊
-function encryptTradeInfo(orderData) {
-    const tradeInfo = {
-        MerchantID: NEWEBPAY_CONFIG.MerchantID,
-        RespondType: 'JSON',
-        TimeStamp: Math.floor(Date.now() / 1000),
-        Version: '2.0',
-        MerchantOrderNo: orderData.orderId,
-        Amt: orderData.total,
-        ItemDesc: `阿智小舖訂單 - ${orderData.items.length}項商品`,
-        ReturnURL: NEWEBPAY_CONFIG.ReturnURL,
-        NotifyURL: NEWEBPAY_CONFIG.NotifyURL,
-        CustomerURL: NEWEBPAY_CONFIG.CustomerURL,
-        Email: orderData.customer.email,
-        LoginType: 0
-    };
-
-    // 使用AES加密
-    const tradeInfoString = JSON.stringify(tradeInfo);
-    return encryptAES(tradeInfoString, NEWEBPAY_CONFIG.HashKey, NEWEBPAY_CONFIG.HashIV);
-}
-
-// 產生交易驗證碼
-function generateTradeSha(orderData) {
-    const tradeInfo = encryptTradeInfo(orderData);
-    const hashString = `HashKey=${NEWEBPAY_CONFIG.HashKey}&${tradeInfo}&HashIV=${NEWEBPAY_CONFIG.HashIV}`;
-    return sha256(hashString).toUpperCase();
-}
-
-// AES加密（簡化版）
-function encryptAES(data, key, iv) {
-    // 這裡應該使用真正的AES加密
-    // 為了演示，我們使用簡單的Base64編碼
-    return btoa(data);
-}
-
-// SHA256雜湊（簡化版）
-function sha256(str) {
-    // 這裡應該使用真正的SHA256
-    // 為了演示，我們使用簡單的字串處理
-    return str.split('').reverse().join('');
-}
-
-// 產生訂單編號
 function generateOrderId() {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    return `RZ${timestamp}${random}`;
+    return `RZ${Date.now()}${Math.floor(Math.random() * 1000)}`;
 }
 
-// 顯示提示訊息
 function showAlert(message, type = 'info') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     alertDiv.innerHTML = `
-        ${message}
+        ${escapeHtml(message)}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
     document.body.appendChild(alertDiv);
-    
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.parentNode.removeChild(alertDiv);
-        }
+        if (alertDiv.parentNode) alertDiv.parentNode.removeChild(alertDiv);
     }, 5000);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+    });
 }
